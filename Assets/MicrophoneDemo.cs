@@ -103,7 +103,7 @@ namespace Whisper.Samples
 
             var audioClip = AudioClip.Create("echo", recordedAudio.Data.Length, recordedAudio.Channels, recordedAudio.Frequency, false);
             audioClip.SetData(recordedAudio.Data, 0);
-            //audioSource.PlayOneShot(audioClip);
+            audioSource.PlayOneShot(audioClip);
 
             StartCoroutine(SendAudioToAPI(audioClip));
 
