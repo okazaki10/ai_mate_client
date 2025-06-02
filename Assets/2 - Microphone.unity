@@ -3329,6 +3329,7 @@ MonoBehaviour:
   translateToggle: {fileID: 1425433665}
   vadToggle: {fileID: 1279549933}
   scroll: {fileID: 942089564}
+  isEcho: 1
 --- !u!114 &1337591123
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3350,14 +3351,15 @@ MonoBehaviour:
   vadUpdateRateSec: 0.1
   vadContextSec: 30
   vadLastSec: 1.25
-  vadThd: 1.2
-  vadFreqThd: 200
+  vadThd: 1.1
+  vadFreqThd: 100
   vadIndicatorImage: {fileID: 1756544758}
   vadStop: 1
   dropVadPart: 1
   vadStopTime: 1
   microphoneDropdown: {fileID: 948466958}
   microphoneDefaultLabel: Default microphone
+  voiceStartBufferSec: 1
 --- !u!82 &1337591124
 AudioSource:
   m_ObjectHideFlags: 0
@@ -3537,7 +3539,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 967652833}
   m_HandleRect: {fileID: 967652832}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
