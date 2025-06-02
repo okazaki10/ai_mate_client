@@ -36,6 +36,10 @@ namespace Whisper.Samples
         private AudioSource audioSource;
         private bool isProcessing = false;
 
+        public bool isEcho = false;
+
+        private bool toggleOffRecord = false;
+
         private void Awake()
         {
             audioSource = GetComponent<AudioSource>();
@@ -43,6 +47,7 @@ namespace Whisper.Samples
             //whisper.OnProgress += OnProgressHandler;
 
             microphoneRecord.OnRecordStop += OnRecordStop;
+            microphoneRecord.OnVadChanged += OnVadDetected;
             
             button.onClick.AddListener(OnButtonPressed);
             //languageDropdown.value = languageDropdown.options
@@ -55,8 +60,7 @@ namespace Whisper.Samples
             vadToggle.isOn = microphoneRecord.vadStop;
             vadToggle.onValueChanged.AddListener(OnVadChanged);
 
-            microphoneRecord.StartRecord();
-            buttonText.text = "Stop";
+            startRecord();
         }
 
         private void OnVadChanged(bool vadStop)
@@ -66,16 +70,38 @@ namespace Whisper.Samples
 
         private void OnButtonPressed()
         {
-            if (!microphoneRecord.IsRecording)
+            if (toggleOffRecord)
             {
-                microphoneRecord.StartRecord();
+                toggleOffRecord = false;
+                startRecord();
                 buttonText.text = "Stop";
             }
             else
             {
+                toggleOffRecord = true;
                 microphoneRecord.StopRecord();
                 buttonText.text = "Record";
             }
+        }
+
+        private void startRecord()
+        {
+            if (!toggleOffRecord)
+            {
+                microphoneRecord.StartRecord();
+                buttonText.text = "Stop";
+            }
+        }
+
+        private void OnVadDetected(bool vad)
+        {
+           // if (vad) {
+           //     if (!microphoneRecord.IsRecording)
+           //     {
+           //         microphoneRecord.StartRecord();
+           //         buttonText.text = "Stop";
+           //     }
+           //}
         }
         
         private async void OnRecordStop(AudioChunk recordedAudio)
@@ -103,7 +129,10 @@ namespace Whisper.Samples
 
             var audioClip = AudioClip.Create("echo", recordedAudio.Data.Length, recordedAudio.Channels, recordedAudio.Frequency, false);
             audioClip.SetData(recordedAudio.Data, 0);
-            audioSource.PlayOneShot(audioClip);
+            if (isEcho)
+            {
+                audioSource.PlayOneShot(audioClip);
+            }
 
             StartCoroutine(SendAudioToAPI(audioClip));
 
@@ -205,23 +234,20 @@ namespace Whisper.Samples
                             {
                             UnityEngine.Debug.Log("No speech recognized");
                             }
-                        microphoneRecord.StartRecord();
-                        buttonText.text = "Stop";
+                        startRecord();
                     }
                     catch (Exception e)
                     {
                         UnityEngine.Debug.Log($"Failed to parse API response: {e.Message}");
                         //OnErrorOccurred?.Invoke($"Failed to parse response: {e.Message}");
-                        microphoneRecord.StartRecord();
-                        buttonText.text = "Stop";
+                        startRecord();
                     }
                 }
                 else
                 {
                     UnityEngine.Debug.Log($"API request failed: {request.error}");
                     //OnErrorOccurred?.Invoke($"API request failed: {request.error}");
-                    microphoneRecord.StartRecord();
-                    buttonText.text = "Stop";
+                    startRecord();
                 }
             }
 
