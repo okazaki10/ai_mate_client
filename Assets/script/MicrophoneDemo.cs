@@ -229,7 +229,7 @@ namespace Whisper.Samples
                                     }
                                 }
 
-                            outputText.text = response.text;
+                            //outputText.text = response.text;
                             restApiClient.SendTextAndPlayAudio(response.text);
 
                             }

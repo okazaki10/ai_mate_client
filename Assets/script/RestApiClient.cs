@@ -233,6 +233,7 @@ public class RestApiClient : MonoBehaviour
     {
         SendTextRequest(text,
             onSuccess: (response) => {
+                outputText.text = response.data.generated_text;
                 if (!string.IsNullOrEmpty(response.data.base64_audio))
                 {
                     PlayBase64Audio(response.data.base64_audio);
@@ -261,9 +262,9 @@ public class RestApiClient : MonoBehaviour
         SendTextRequest("How are you doing today?",
             onSuccess: (response) => {
                 Debug.Log($"Response: {response.data.generated_text}");
+               
                 if (!string.IsNullOrEmpty(response.data.base64_audio))
                 {
-                    outputText.text = response.data.generated_text;
                     PlayBase64Audio(response.data.base64_audio);
                 }
             },
