@@ -30,6 +30,7 @@ namespace Whisper.Samples
         public Toggle translateToggle;
         public Toggle vadToggle;
         public ScrollRect scroll;
+        public RestApiClient restApiClient;
         
         private string _buffer;
 
@@ -229,6 +230,8 @@ namespace Whisper.Samples
                                 }
 
                             outputText.text = response.text;
+                            restApiClient.SendTextAndPlayAudio(response.text);
+
                             }
                             else
                             {
