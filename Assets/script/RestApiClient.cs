@@ -126,7 +126,7 @@ public class RestApiClient : MonoBehaviour
     }
 
     // Method to convert base64 to AudioClip and play
-    public void PlayBase64Audio(string base64Audio)
+    public void PlayBase64Audio(string base64Audio, Action onAudioDonePlaying)
     {
         if (string.IsNullOrEmpty(base64Audio))
         {
@@ -134,10 +134,10 @@ public class RestApiClient : MonoBehaviour
             return;
         }
 
-        StartCoroutine(ConvertAndPlayAudio(base64Audio));
+        StartCoroutine(ConvertAndPlayAudio(base64Audio, onAudioDonePlaying));
     }
 
-    private IEnumerator ConvertAndPlayAudio(string base64Audio)
+    private IEnumerator ConvertAndPlayAudio(string base64Audio, Action onAudioDonePlaying)
     {
         // Convert base64 to byte array and write to file outside of try-catch
         byte[] audioBytes = ConvertBase64ToBytes(base64Audio);
@@ -169,7 +169,7 @@ public class RestApiClient : MonoBehaviour
                 {
                     audioSource.clip = clip;
                     audioSource.Play();
-                    Debug.Log("Playing audio clip");
+                    StartCoroutine(WaitForAudioToEnd(onAudioDonePlaying));
                 }
                 else
                 {
@@ -184,6 +184,12 @@ public class RestApiClient : MonoBehaviour
 
         // Clean up temporary file
         CleanupTempFile(tempPath);
+    }
+
+    private IEnumerator WaitForAudioToEnd(Action onAudioDonePlaying)
+    {
+        yield return new WaitWhile(() => audioSource.isPlaying);
+        onAudioDonePlaying?.Invoke();
     }
 
     private byte[] ConvertBase64ToBytes(string base64Audio)
@@ -229,47 +235,24 @@ public class RestApiClient : MonoBehaviour
     }
 
     // Convenience method to send text and automatically play returned audio
-    public void SendTextAndPlayAudio(string text)
+    public void SendTextAndPlayAudio(string text, Action onAudioDonePlaying)
     {
         SendTextRequest(text,
             onSuccess: (response) => {
                 outputText.text = response.data.generated_text;
                 if (!string.IsNullOrEmpty(response.data.base64_audio))
                 {
-                    PlayBase64Audio(response.data.base64_audio);
+                    PlayBase64Audio(response.data.base64_audio, onAudioDonePlaying);
                 }
                 else
                 {
                     Debug.Log("No audio data in response");
+                    onAudioDonePlaying.Invoke();
                 }
             },
             onError: (error) => {
                 Debug.LogError($"Failed to get audio: {error}");
-            }
-        );
-    }
-
-    // Example usage methods
-    [ContextMenu("Test API Call")]
-    public void TestApiCall()
-    {
-        SendTextAndPlayAudio("Hello, this is a test message!");
-    }
-
-    [ContextMenu("Test with Custom Text")]
-    public void TestWithCustomText()
-    {
-        SendTextRequest("How are you doing today?",
-            onSuccess: (response) => {
-                Debug.Log($"Response: {response.data.generated_text}");
-               
-                if (!string.IsNullOrEmpty(response.data.base64_audio))
-                {
-                    PlayBase64Audio(response.data.base64_audio);
-                }
-            },
-            onError: (error) => {
-                Debug.LogError($"API Error: {error}");
+                onAudioDonePlaying.Invoke();
             }
         );
     }

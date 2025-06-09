@@ -3321,7 +3321,7 @@ MonoBehaviour:
   microphoneRecord: {fileID: 1337591123}
   streamSegments: 1
   printLanguage: 1
-  apiUrl: http://192.168.1.4:8000/recognize
+  apiUrl: http://192.168.1.9:8000/recognize
   button: {fileID: 2099288375}
   buttonText: {fileID: 1431014845}
   outputText: {fileID: 1194114916}
@@ -3331,7 +3331,7 @@ MonoBehaviour:
   vadToggle: {fileID: 1279549933}
   scroll: {fileID: 942089564}
   restApiClient: {fileID: 1337591125}
-  isEcho: 1
+  isEcho: 0
 --- !u!114 &1337591123
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3471,7 +3471,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 39f6670cdc4d8734e965d7053cf47327, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  apiBaseUrl: http://192.168.1.4:7874
+  apiBaseUrl: http://192.168.1.9:7874
   apiKey: 
   audioSource: {fileID: 1337591124}
   outputText: {fileID: 1194114916}
@@ -3557,7 +3557,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 967652833}
   m_HandleRect: {fileID: 967652832}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

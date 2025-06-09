@@ -75,13 +75,11 @@ namespace Whisper.Samples
             {
                 toggleOffRecord = false;
                 startRecord();
-                buttonText.text = "Stop";
             }
             else
             {
                 toggleOffRecord = true;
-                microphoneRecord.StopRecord();
-                buttonText.text = "Record";
+                stopRecord();
             }
         }
 
@@ -92,6 +90,12 @@ namespace Whisper.Samples
                 microphoneRecord.StartRecord();
                 buttonText.text = "Stop";
             }
+        }
+
+        private void stopRecord()
+        {
+            microphoneRecord.StopRecord();
+            buttonText.text = "Record";
         }
 
         private void OnVadDetected(bool vad)
@@ -195,6 +199,11 @@ namespace Whisper.Samples
             }
         }
 
+        void onAudioDonePlaying()
+        {
+            startRecord();
+        }
+
         IEnumerator SendAudioToAPI(AudioClip audioClip)
         {
             byte[] wavData = AudioClipToWav(audioClip);
@@ -230,14 +239,15 @@ namespace Whisper.Samples
                                 }
 
                             //outputText.text = response.text;
-                            restApiClient.SendTextAndPlayAudio(response.text);
+                            restApiClient.SendTextAndPlayAudio(response.text, onAudioDonePlaying);
 
                             }
                             else
                             {
                             UnityEngine.Debug.Log("No speech recognized");
+                            startRecord();
                             }
-                        startRecord();
+                        
                     }
                     catch (Exception e)
                     {
