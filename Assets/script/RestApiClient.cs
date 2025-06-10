@@ -29,6 +29,7 @@ public class ApiRequest
 {
     public string name;
     public string prompt;
+    public string language;
 }
 
 public class RestApiClient : MonoBehaviour
@@ -60,7 +61,8 @@ public class RestApiClient : MonoBehaviour
         ApiRequest requestData = new ApiRequest
         {
             name = "raka",
-            prompt = text
+            prompt = text,
+            language = "en"
         };
 
         string jsonData = JsonUtility.ToJson(requestData);

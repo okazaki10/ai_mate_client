@@ -212,6 +212,7 @@ namespace Whisper.Samples
 
             WWWForm form = new WWWForm();
             form.AddBinaryData("audio_file", wavData, "audio.wav", "audio/wav");
+            form.AddField("language", "en");
 
             using (UnityWebRequest request = UnityWebRequest.Post(endpoint, form))
             {

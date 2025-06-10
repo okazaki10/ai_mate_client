@@ -3358,7 +3358,7 @@ MonoBehaviour:
   vadIndicatorImage: {fileID: 1756544758}
   vadStop: 1
   dropVadPart: 1
-  vadStopTime: 1
+  vadStopTime: 2
   microphoneDropdown: {fileID: 948466958}
   microphoneDefaultLabel: Default microphone
   voiceStartBufferSec: 1
