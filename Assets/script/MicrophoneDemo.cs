@@ -21,7 +21,7 @@ namespace Whisper.Samples
         public bool printLanguage = true;
         public string apiUrl = "http://localhost:8000/recognize";
 
-        [Header("UI")] 
+        [Header("UI")]
         public Button button;
         public Text buttonText;
         public Text outputText;
@@ -31,7 +31,7 @@ namespace Whisper.Samples
         public Toggle vadToggle;
         public ScrollRect scroll;
         public RestApiClient restApiClient;
-        
+
         private string _buffer;
 
         private AudioSource audioSource;
@@ -49,7 +49,7 @@ namespace Whisper.Samples
 
             microphoneRecord.OnRecordStop += OnRecordStop;
             microphoneRecord.OnVadChanged += OnVadDetected;
-            
+
             button.onClick.AddListener(OnButtonPressed);
             //languageDropdown.value = languageDropdown.options
             //    .FindIndex(op => op.text == whisper.language);
@@ -100,15 +100,15 @@ namespace Whisper.Samples
 
         private void OnVadDetected(bool vad)
         {
-           // if (vad) {
-           //     if (!microphoneRecord.IsRecording)
-           //     {
-           //         microphoneRecord.StartRecord();
-           //         buttonText.text = "Stop";
-           //     }
-           //}
+            // if (vad) {
+            //     if (!microphoneRecord.IsRecording)
+            //     {
+            //         microphoneRecord.StartRecord();
+            //         buttonText.text = "Stop";
+            //     }
+            //}
         }
-        
+
         private async void OnRecordStop(AudioChunk recordedAudio)
         {
             //buttonText.text = "Record";
@@ -212,58 +212,58 @@ namespace Whisper.Samples
 
             WWWForm form = new WWWForm();
             form.AddBinaryData("audio_file", wavData, "audio.wav", "audio/wav");
-            form.AddField("language", "en");
+            form.AddField("language", restApiClient.language);
 
             using (UnityWebRequest request = UnityWebRequest.Post(endpoint, form))
             {
                 yield return request.SendWebRequest();
 
-                if (request.result == UnityWebRequest.Result.Success)
-                {
-                    try
-                    {
-                            WhisperXResponse response = JsonUtility.FromJson<WhisperXResponse>(request.downloadHandler.text);
-
-                            if (response.success && !string.IsNullOrEmpty(response.text))
-                            {
-                                UnityEngine.Debug.Log($"Speech recognized: {response.text}");
-                                //OnSpeechRecognized?.Invoke(response.text);
-
-                                // Log segment information
-                                if (response.segments != null && response.segments.Length > 0)
-                                {
-                                UnityEngine.Debug.Log($"Segments count: {response.segments.Length}");
-                                    foreach (var segment in response.segments)
-                                    {
-                                    UnityEngine.Debug.Log($"Segment: '{segment.text}' ({segment.start:F2}s - {segment.end:F2}s)");
-                                    }
-                                }
-
-                            //outputText.text = response.text;
-                            restApiClient.SendTextAndPlayAudio(response.text, onAudioDonePlaying);
-
-                            }
-                            else
-                            {
-                            UnityEngine.Debug.Log("No speech recognized");
-                            startRecord();
-                            }
-                        
-                    }
-                    catch (Exception e)
-                    {
-                        UnityEngine.Debug.Log($"Failed to parse API response: {e.Message}");
-                        //OnErrorOccurred?.Invoke($"Failed to parse response: {e.Message}");
-                        startRecord();
-                    }
-                }
-                else
+                if (request.result != UnityWebRequest.Result.Success)
                 {
                     UnityEngine.Debug.Log($"API request failed: {request.error}");
                     //OnErrorOccurred?.Invoke($"API request failed: {request.error}");
                     startRecord();
+                    isProcessing = false;
+                    yield break;
+                }
+
+                try
+                {
+                    WhisperXResponse response = JsonUtility.FromJson<WhisperXResponse>(request.downloadHandler.text);
+
+                    if (!response.success || string.IsNullOrEmpty(response.text))
+                    {
+                        UnityEngine.Debug.Log("No speech recognized");
+                        startRecord();
+                        yield break;
+                    }
+
+                    UnityEngine.Debug.Log($"Speech recognized: {response.text}");
+                    //OnSpeechRecognized?.Invoke(response.text);
+
+                    // Log segment information
+                    if (response.segments != null && response.segments.Length > 0)
+                    {
+                        UnityEngine.Debug.Log($"Segments count: {response.segments.Length}");
+                        foreach (var segment in response.segments)
+                        {
+                            UnityEngine.Debug.Log($"Segment: '{segment.text}' ({segment.start:F2}s - {segment.end:F2}s)");
+                        }
+                    }
+
+                    //outputText.text = response.text;
+                    restApiClient.SendTextAndPlayAudio(response.text, onAudioDonePlaying);
+
+
+                }
+                catch (Exception e)
+                {
+                    UnityEngine.Debug.Log($"Failed to parse API response: {e.Message}");
+                    //OnErrorOccurred?.Invoke($"Failed to parse response: {e.Message}");
+                    startRecord();
                 }
             }
+
 
             isProcessing = false;
         }
@@ -273,7 +273,7 @@ namespace Whisper.Samples
             var opt = languageDropdown.options[ind];
             //whisper.language = opt.text;
         }
-        
+
         private void OnTranslateChanged(bool translate)
         {
             //whisper.translateToEnglish = translate;
@@ -285,7 +285,7 @@ namespace Whisper.Samples
                 return;
             timeText.text = $"Progress: {progress}%";
         }
-        
+
         //private void OnNewSegment(WhisperSegment segment)
         //{
         //    if (!streamSegments || !outputText)

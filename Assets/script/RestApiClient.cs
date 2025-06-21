@@ -41,6 +41,8 @@ public class RestApiClient : MonoBehaviour
     [Header("Audio Settings")]
     public AudioSource audioSource;
     public Text outputText;
+    public string name;
+    public string language;
 
     private void Start()
     {
@@ -60,9 +62,9 @@ public class RestApiClient : MonoBehaviour
         // Create request data
         ApiRequest requestData = new ApiRequest
         {
-            name = "raka",
+            name = name,
             prompt = text,
-            language = "en"
+            language = language
         };
 
         string jsonData = JsonUtility.ToJson(requestData);
@@ -83,34 +85,32 @@ public class RestApiClient : MonoBehaviour
 
             yield return request.SendWebRequest();
 
-            if (request.result == UnityWebRequest.Result.Success)
-            {
-                string responseText = request.downloadHandler.text;
-
-                // Parse response outside of try-catch to avoid yield issues
-                ApiResponse response = ParseApiResponse(responseText);
-
-                if (response != null)
-                {
-                    Debug.Log($"API Response Status: {response.status}");
-                    Debug.Log($"Generated Text: {response.data.generated_text}");
-                    Debug.Log($"Tokens - Prompt: {response.data.prompt_token}, Output: {response.data.output_token}");
-
-                    onSuccess?.Invoke(response);
-                }
-                else
-                {
-                    string error = "Failed to parse API response";
-                    Debug.LogError(error);
-                    onError?.Invoke(error);
-                }
-            }
-            else
+            if (request.result != UnityWebRequest.Result.Success)
             {
                 string error = $"Request failed: {request.error} - {request.responseCode}";
                 Debug.LogError(error);
                 onError?.Invoke(error);
+                yield break;
             }
+
+            string responseText = request.downloadHandler.text;
+
+            // Parse response outside of try-catch to avoid yield issues
+            ApiResponse response = ParseApiResponse(responseText);
+
+            if (response == null)
+            {
+                string error = "Failed to parse API response";
+                Debug.LogError(error);
+                onError?.Invoke(error);
+                yield break;
+            }
+
+            Debug.Log($"API Response Status: {response.status}");
+            Debug.Log($"Generated Text: {response.data.generated_text}");
+            Debug.Log($"Tokens - Prompt: {response.data.prompt_token}, Output: {response.data.output_token}");
+
+            onSuccess?.Invoke(response);
         }
     }
 
@@ -240,7 +240,8 @@ public class RestApiClient : MonoBehaviour
     public void SendTextAndPlayAudio(string text, Action onAudioDonePlaying)
     {
         SendTextRequest(text,
-            onSuccess: (response) => {
+            onSuccess: (response) =>
+            {
                 outputText.text = response.data.generated_text;
                 if (!string.IsNullOrEmpty(response.data.base64_audio))
                 {
@@ -252,7 +253,8 @@ public class RestApiClient : MonoBehaviour
                     onAudioDonePlaying.Invoke();
                 }
             },
-            onError: (error) => {
+            onError: (error) =>
+            {
                 Debug.LogError($"Failed to get audio: {error}");
                 onAudioDonePlaying.Invoke();
             }

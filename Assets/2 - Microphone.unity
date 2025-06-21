@@ -3475,6 +3475,8 @@ MonoBehaviour:
   apiKey: 
   audioSource: {fileID: 1337591124}
   outputText: {fileID: 1194114916}
+  name: raka
+  language: id
 --- !u!1 &1345287211
 GameObject:
   m_ObjectHideFlags: 0
