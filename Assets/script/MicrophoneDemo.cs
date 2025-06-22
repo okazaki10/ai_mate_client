@@ -71,6 +71,7 @@ namespace Whisper.Samples
 
         private void OnButtonPressed()
         {
+            print("test");
             if (toggleOffRecord)
             {
                 toggleOffRecord = false;
