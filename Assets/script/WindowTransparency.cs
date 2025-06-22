@@ -20,9 +20,6 @@ public class WindowTransparency : MonoBehaviour
     private static extern IntPtr GetActiveWindow();
 
     [DllImport("user32.dll")]
-    private static extern int MessageBox(IntPtr hWnd, string text, string caption, uint type);
-
-    [DllImport("user32.dll")]
     private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
     [DllImport("user32.dll")]
@@ -51,21 +48,9 @@ public class WindowTransparency : MonoBehaviour
 
     void Start()
     {
-        MessageBox(new IntPtr(0), "test", "test", 0);
-        Camera.main.clearFlags = CameraClearFlags.SolidColor;
-        Camera.main.backgroundColor = new Color(0, 0, 0, 0); // Transparent black
-        MARGINS margins = new MARGINS
-        {
-            cxLeftWidth = -1,
-            cxRightWidth = -1,
-            cyTopHeight = -1,
-            cyBottomHeight = -1
-        };
-        var s = GetActiveWindow();
-        DwmExtendFrameIntoClientArea(s, ref margins);
-//#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
-//        StartCoroutine(SetupTransparency());
-//#endif
+#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
+        StartCoroutine(SetupTransparency());
+#endif
     }
 
     private System.Collections.IEnumerator SetupTransparency()

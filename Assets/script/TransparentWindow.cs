@@ -159,8 +159,6 @@ public class TransparentWindow : MonoBehaviour
             }
         }
 
-        currentCamera.clearFlags = CameraClearFlags.Depth; // Try this instead
-        currentCamera.backgroundColor = Color.clear;
 
         // マウス下描画色抽出用テクスチャを準備
         colorPickerTexture = new Texture2D(1, 1, TextureFormat.ARGB32, false);
