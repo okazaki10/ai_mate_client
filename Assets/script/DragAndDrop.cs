@@ -11,7 +11,7 @@ public class DragAndDrop : MonoBehaviour
         // Get the main camera
         cam = Camera.main;
         if (cam == null)
-            cam = FindObjectOfType<Camera>();
+            cam = FindFirstObjectByType<Camera>();
     }
 
     void OnMouseDown()
@@ -59,7 +59,7 @@ public class DragAndDropAlternative : MonoBehaviour
     {
         cam = Camera.main;
         if (cam == null)
-            cam = FindObjectOfType<Camera>();
+            cam = FindFirstObjectByType<Camera>();
     }
 
     void Update()
@@ -69,7 +69,7 @@ public class DragAndDropAlternative : MonoBehaviour
 
     void HandleMouseInput()
     {
-        if (Input.GetMouseButtonDown(0)) // Left mouse button pressed
+        if (Input.GetMouseButtonDown(0)) // Left mouse buttonRecord pressed
         {
             RaycastHit hit;
             Ray ray = cam.ScreenPointToRay(Input.mousePosition);
@@ -85,13 +85,13 @@ public class DragAndDropAlternative : MonoBehaviour
             }
         }
 
-        if (Input.GetMouseButton(0) && isDragging) // While holding left mouse button
+        if (Input.GetMouseButton(0) && isDragging) // While holding left mouse buttonRecord
         {
             Vector3 mousePos = GetMouseWorldPosition();
             transform.position = mousePos + offset;
         }
 
-        if (Input.GetMouseButtonUp(0)) // Left mouse button released
+        if (Input.GetMouseButtonUp(0)) // Left mouse buttonRecord released
         {
             isDragging = false;
         }

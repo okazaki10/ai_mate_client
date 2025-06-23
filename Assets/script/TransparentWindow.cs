@@ -124,10 +124,6 @@ public class TransparentWindow : MonoBehaviour
     }
 #endif // !UNITY_EDITOR && UNITY_STANDALONE_WIN
 
-    /// <summary>
-    /// Set my window is click-through or not
-    /// </summary>
-    /// <param name="through"></param>
     private void SetClickThrough(bool through)
     {
         const int GWL_EXSTYLE = -20;
@@ -149,38 +145,28 @@ public class TransparentWindow : MonoBehaviour
     {
         if (!currentCamera)
         {
-            // カメラ指定がなければメインカメラを探す
             currentCamera = Camera.main;
 
-            // もしメインカメラが見つからなければ、Findで探す
             if (!currentCamera)
             {
-                currentCamera = FindObjectOfType<Camera>();
+                currentCamera = FindFirstObjectByType<Camera>();
             }
         }
 
-
-        // マウス下描画色抽出用テクスチャを準備
         colorPickerTexture = new Texture2D(1, 1, TextureFormat.ARGB32, false);
 
-        // マウスカーソル直下の色を検査するコルーチンを開始
         StartCoroutine(PickColorCoroutine());
     }
 
     void Update()
     {
-        // 操作透過／不透過を更新
         UpdateClickThrough();
     }
 
-    /// <summary>
-    /// 画素の色を基に操作透過状態を切り替える
-    /// </summary>
     void UpdateClickThrough()
     {
         if (isClickThrough)
         {
-            // 現在が操作透過状態で、かつ不透明画素上にマウスが来たら、操作透過をやめる
             if (isOnOpaquePixel)
             {
                 SetClickThrough(false);
@@ -189,7 +175,6 @@ public class TransparentWindow : MonoBehaviour
         }
         else
         {
-            // 現在が操作受付中で、かつ透明画素上にマウスが来たら、操作透過に切り替える
             if (!isOnOpaquePixel)
             {
                 SetClickThrough(true);
@@ -198,10 +183,6 @@ public class TransparentWindow : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// WaitForEndOfFrame()を用いたコルーチンで、描画完了後の画像を監視
-    /// </summary>
-    /// <returns></returns>
     private IEnumerator PickColorCoroutine()
     {
         while (Application.isPlaying)
@@ -212,34 +193,24 @@ public class TransparentWindow : MonoBehaviour
         yield return null;
     }
 
-    /// <summary>
-    /// マウス直下の画素が透明かどうかを判定
-    /// </summary>
-    /// <param name="cam"></param>
     void ObservePixelUnderCursor(Camera cam)
     {
-        // カメラが不明ならば何もしない
         if (!cam) return;
 
         Vector2 mousePos = Input.mousePosition;
         Rect camRect = cam.pixelRect;
 
-        // マウスが描画範囲内ならチェックする
         if (camRect.Contains(mousePos))
         {
             try
             {
-                // マウス直下の画素のみReadPixelする
-                // 参考 http://tsubakit1.hateblo.jp/entry/20131203/1386000440
                 colorPickerTexture.ReadPixels(new Rect(mousePos, Vector2.one), 0, 0);
                 Color color = colorPickerTexture.GetPixel(0, 0);
 
-                // アルファ値がしきい値以上ならば、不透過とする
                 isOnOpaquePixel = (color.a >= opaqueThreshold);
             }
             catch (System.Exception ex)
             {
-                // 稀に範囲外になってしまう？
                 Debug.LogError(ex.Message);
                 isOnOpaquePixel = false;
             }
@@ -249,6 +220,4 @@ public class TransparentWindow : MonoBehaviour
             isOnOpaquePixel = false;
         }
     }
-
-
 }

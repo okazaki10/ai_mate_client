@@ -1,27 +1,37 @@
 using System;
 using System.Collections;
 using System.Text;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
 [Serializable]
-public class ApiResponse
+public class ApiResponse<T>
 {
     public string status;
-    public ApiData data;
+    public T data;
     public string message;
+}
+
+[Serializable]
+public class ActionParams
+{
+    public ArrayList<string> emotions = new ArrayList<string>();
+    public ArrayList<string> actions = new ArrayList<string>();
 }
 
 [Serializable]
 public class ApiData
 {
+    public string character_name;
     public string generated_text;
     public string prompt;
     public string full_response;
     public int prompt_token;
     public int output_token;
     public string base64_audio;
+    public ActionParams actionParams;
 }
 
 [Serializable]
@@ -34,54 +44,73 @@ public class ApiRequest
 
 public class RestApiClient : MonoBehaviour
 {
-    [Header("API Configuration")]
-    public string apiBaseUrl = "https://your-api-endpoint.com/api";
-    public string apiKey = "your-api-key-here";
+    //[Header("API Configuration")]
+    //public string apiBaseUrl = "https://your-api-endpoint.com/api";
+    //public string apiKey = "your-api-key-here";
 
     [Header("Audio Settings")]
     public AudioSource audioSource;
-    public Text outputText;
+    public TMP_Text chatText;
     public string name;
     public string language;
 
+    public InputField inputFieldUsername;
+    public TMP_Dropdown dropDownLanguage;
+    public InputField inputFieldIpAddress;
+    public ScrollRect scrollRectChat;
+
     private void Start()
     {
+        inputFieldIpAddress.text = "http://127.0.0.1";
+        inputFieldUsername.text = "raka";
         // Get AudioSource component if not assigned
         if (audioSource == null)
             audioSource = GetComponent<AudioSource>();
+
+        StartCoroutine(getChats(onSuccess: (response) =>
+        {
+            chatText.text += response.data;
+            ScrollDown();
+        },
+            onError: (error) =>
+            {
+                Debug.LogError($"Failed to fetch chats: {error}");
+            }
+           )
+        );
     }
 
     // Method to send text and receive audio response
-    public void SendTextRequest(string text, Action<ApiResponse> onSuccess = null, Action<string> onError = null)
+    public void SendTextRequest(string text, Action<ApiResponse<ApiData>> onSuccess = null, Action<string> onError = null)
     {
         StartCoroutine(SendTextRequestCoroutine(text, onSuccess, onError));
     }
 
-    private IEnumerator SendTextRequestCoroutine(string text, Action<ApiResponse> onSuccess, Action<string> onError)
+    private IEnumerator SendTextRequestCoroutine(string text, Action<ApiResponse<ApiData>> onSuccess, Action<string> onError)
     {
         // Create request data
         ApiRequest requestData = new ApiRequest
         {
-            name = name,
+            name = inputFieldUsername.text,
             prompt = text,
-            language = language
+            language = dropDownLanguage.options[dropDownLanguage.value].text
         };
 
         string jsonData = JsonUtility.ToJson(requestData);
         byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonData);
 
         // Create UnityWebRequest
-        using (UnityWebRequest request = new UnityWebRequest(apiBaseUrl + "/generate", "POST"))
+        using (UnityWebRequest request = new UnityWebRequest(inputFieldIpAddress.text + ":7874" + "/generate", "POST"))
         {
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
 
-            // Add API key if provided
-            if (!string.IsNullOrEmpty(apiKey))
-            {
-                request.SetRequestHeader("Authorization", "Bearer " + apiKey);
-            }
+            //// Add API key if provided
+            //if (!string.IsNullOrEmpty(apiKey))
+            //{
+            //    request.SetRequestHeader("Authorization", "Bearer " + apiKey);
+            //}
 
             yield return request.SendWebRequest();
 
@@ -96,7 +125,7 @@ public class RestApiClient : MonoBehaviour
             string responseText = request.downloadHandler.text;
 
             // Parse response outside of try-catch to avoid yield issues
-            ApiResponse response = ParseApiResponse(responseText);
+            ApiResponse<ApiData> response = ParseApiResponse<ApiData>(responseText);
 
             if (response == null)
             {
@@ -114,11 +143,55 @@ public class RestApiClient : MonoBehaviour
         }
     }
 
-    private ApiResponse ParseApiResponse(string responseText)
+    private IEnumerator getChats(Action<ApiResponse<String>> onSuccess, Action<string> onError)
+    {
+        // Create UnityWebRequest
+        using (UnityWebRequest request = new UnityWebRequest(inputFieldIpAddress.text + ":7874" + "/get-chat", "GET"))
+        {
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            //// Add API key if provided
+            //if (!string.IsNullOrEmpty(apiKey))
+            //{
+            //    request.SetRequestHeader("Authorization", "Bearer " + apiKey);
+            //}
+
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                string error = $"Request failed: {request.error} - {request.responseCode}";
+                Debug.LogError(error);
+                onError?.Invoke(error);
+                yield break;
+            }
+
+            string responseText = request.downloadHandler.text;
+
+            // Parse response outside of try-catch to avoid yield issues
+            var response = ParseApiResponse<String>(responseText);
+
+            if (response == null)
+            {
+                string error = "Failed to parse API response";
+                Debug.LogError(error);
+                onError?.Invoke(error);
+                yield break;
+            }
+
+            Debug.Log($"API Response Status: {response.status}");
+            Debug.Log($"Generated Text: {response.data}");
+
+            onSuccess?.Invoke(response);
+        }
+    }
+
+    private ApiResponse<T> ParseApiResponse<T>(string responseText)
     {
         try
         {
-            return JsonUtility.FromJson<ApiResponse>(responseText);
+            return JsonUtility.FromJson<ApiResponse<T>>(responseText);
         }
         catch (Exception e)
         {
@@ -242,7 +315,8 @@ public class RestApiClient : MonoBehaviour
         SendTextRequest(text,
             onSuccess: (response) =>
             {
-                outputText.text = response.data.generated_text;
+                chatText.text += "\n\n" + response.data.character_name + " : " + response.data.generated_text;
+                ScrollDown();
                 if (!string.IsNullOrEmpty(response.data.base64_audio))
                 {
                     PlayBase64Audio(response.data.base64_audio, onAudioDonePlaying);
@@ -259,5 +333,12 @@ public class RestApiClient : MonoBehaviour
                 onAudioDonePlaying.Invoke();
             }
         );
+    }
+
+    public void ScrollDown()
+    {
+        // Scroll to bottom
+        Canvas.ForceUpdateCanvases(); // ensures layout updates first
+        scrollRectChat.verticalNormalizedPosition = 0f;
     }
 }

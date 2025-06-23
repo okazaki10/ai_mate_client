@@ -129,11 +129,11 @@ public class VRMAdvancedAudioMouth : MonoBehaviour
         if (vrmBlendShapeProxy == null) return;
 
         // Reset all mouth shapes first
-        vrmBlendShapeProxy.ImmediatelySetValue(BlendShapePreset.A, 0f);
-        vrmBlendShapeProxy.ImmediatelySetValue(BlendShapePreset.I, 0f);
-        vrmBlendShapeProxy.ImmediatelySetValue(BlendShapePreset.U, 0f);
-        vrmBlendShapeProxy.ImmediatelySetValue(BlendShapePreset.E, 0f);
-        vrmBlendShapeProxy.ImmediatelySetValue(BlendShapePreset.O, 0f);
+        vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.A), 0f);
+        vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.I), 0f);
+        vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.U), 0f);
+        vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.E), 0f);
+        vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.O), 0f);
 
         if (intensity > 0.1f)
         {
@@ -146,9 +146,9 @@ public class VRMAdvancedAudioMouth : MonoBehaviour
                 float highIntensity = freqBands[highFreqBand];
 
                 // Map frequencies to mouth shapes
-                vrmBlendShapeProxy.ImmediatelySetValue(BlendShapePreset.A, lowIntensity * aWeight);
-                vrmBlendShapeProxy.ImmediatelySetValue(BlendShapePreset.O, midIntensity * oWeight);
-                vrmBlendShapeProxy.ImmediatelySetValue(BlendShapePreset.I, highIntensity * iWeight);
+                vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.A), lowIntensity * aWeight);
+                vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.O), midIntensity * oWeight);
+                vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.I), highIntensity * iWeight);
             }
             else
             {
@@ -158,15 +158,15 @@ public class VRMAdvancedAudioMouth : MonoBehaviour
 
                 if (variation < 0.33f)
                 {
-                    vrmBlendShapeProxy.ImmediatelySetValue(BlendShapePreset.A, intensity * aWeight);
+                    vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.A), intensity * aWeight);
                 }
                 else if (variation < 0.66f)
                 {
-                    vrmBlendShapeProxy.ImmediatelySetValue(BlendShapePreset.O, intensity * oWeight);
+                    vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.O), intensity * oWeight);
                 }
                 else
                 {
-                    vrmBlendShapeProxy.ImmediatelySetValue(BlendShapePreset.I, intensity * iWeight);
+                    vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.I), intensity * iWeight);
                 }
             }
         }

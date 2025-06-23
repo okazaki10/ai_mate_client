@@ -27,7 +27,7 @@ public class SingletonMonoBehaviour<T> : MonoBehaviour where T : SingletonMonoBe
 
             if (SingletonMonoBehaviour<T>.instance == null)
             {
-                SingletonMonoBehaviour<T>.instance = (T)FindObjectOfType(typeof(T));
+                SingletonMonoBehaviour<T>.instance = (T)FindFirstObjectByType(typeof(T));
 
                 if (SingletonMonoBehaviour<T>.instance == null)
                 {

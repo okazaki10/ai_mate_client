@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Diagnostics;
 using System.IO;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.Networking;
@@ -14,23 +15,32 @@ namespace Whisper.Samples
     /// <summary>
     /// Record audio clip from microphone and make a transcription.
     /// </summary>
-    public class MicrophoneDemo : MonoBehaviour
+    public class AiMateMain : MonoBehaviour
     {
         public MicrophoneRecord microphoneRecord;
         public bool streamSegments = true;
         public bool printLanguage = true;
-        public string apiUrl = "http://localhost:8000/recognize";
 
         [Header("UI")]
-        public Button button;
-        public Text buttonText;
-        public Text outputText;
+        public Button buttonRecord;
+        public Text recordText;
+        public TMP_Text chatText;
         public Text timeText;
-        public Dropdown languageDropdown;
+        public TMP_Dropdown languageDropdown;
         public Toggle translateToggle;
         public Toggle vadToggle;
         public ScrollRect scroll;
         public RestApiClient restApiClient;
+
+        public Canvas chatCanvas;
+        public Canvas settingCanvas;
+        public Canvas menuCanvas;
+        public Button buttonToggleChatOnOff;
+        public Button buttonShowSettings;
+        public Button buttonBackFromSettings;
+        public InputField inputFieldMessage;
+        public Button buttonSendMessage;
+        public ScrollRect scrollRectChat;
 
         private string _buffer;
 
@@ -50,7 +60,13 @@ namespace Whisper.Samples
             microphoneRecord.OnRecordStop += OnRecordStop;
             microphoneRecord.OnVadChanged += OnVadDetected;
 
-            button.onClick.AddListener(OnButtonPressed);
+            buttonRecord.onClick.AddListener(OnButtonPressed);
+            buttonToggleChatOnOff.onClick.AddListener(onToggleChatOnOff);
+            buttonShowSettings.onClick.AddListener(onShowSettings);
+            buttonBackFromSettings.onClick.AddListener(onBackFromSettings);
+            buttonSendMessage.onClick.AddListener(onSendMessage);
+            inputFieldMessage.onEndEdit.AddListener(OnInputEndEdit);
+
             //languageDropdown.value = languageDropdown.options
             //    .FindIndex(op => op.text == whisper.language);
             //languageDropdown.onValueChanged.AddListener(OnLanguageChanged);
@@ -64,6 +80,48 @@ namespace Whisper.Samples
             startRecord();
         }
 
+        void OnInputEndEdit(string input)
+        {
+            if (Input.GetKeyDown(KeyCode.Return) && inputFieldMessage.text != "")
+            {
+                onSendMessage();
+            }
+        }
+
+        private void onSendMessage()
+        {
+            chatText.text += "\n\n" + restApiClient.inputFieldUsername.text + " : " + inputFieldMessage.text;
+            restApiClient.SendTextAndPlayAudio(inputFieldMessage.text, onAudioDonePlaying);
+            inputFieldMessage.text = "";
+            toggleOffRecord = true;
+            stopRecord();
+            ScrollDown();
+        }
+
+        public void ScrollDown()
+        {
+            // Scroll to bottom
+            Canvas.ForceUpdateCanvases(); // ensures layout updates first
+            scrollRectChat.verticalNormalizedPosition = 0f;
+        }
+
+        private void onToggleChatOnOff()
+        {
+            chatCanvas.enabled = !chatCanvas.enabled;
+        }
+
+        private void onShowSettings()
+        {
+            settingCanvas.enabled = true;
+            menuCanvas.enabled = false;
+        }
+
+        private void onBackFromSettings()
+        {
+            settingCanvas.enabled = false;
+            menuCanvas.enabled = true;
+        }
+
         private void OnVadChanged(bool vadStop)
         {
             microphoneRecord.vadStop = vadStop;
@@ -71,7 +129,6 @@ namespace Whisper.Samples
 
         private void OnButtonPressed()
         {
-            print("test");
             if (toggleOffRecord)
             {
                 toggleOffRecord = false;
@@ -89,14 +146,14 @@ namespace Whisper.Samples
             if (!toggleOffRecord)
             {
                 microphoneRecord.StartRecord();
-                buttonText.text = "Stop";
+                recordText.text = "Stop";
             }
         }
 
         private void stopRecord()
         {
             microphoneRecord.StopRecord();
-            buttonText.text = "Record";
+            recordText.text = "Record";
         }
 
         private void OnVadDetected(bool vad)
@@ -105,21 +162,25 @@ namespace Whisper.Samples
             //     if (!microphoneRecord.IsRecording)
             //     {
             //         microphoneRecord.StartRecord();
-            //         buttonText.text = "Stop";
+            //         recordText.text = "Stop";
             //     }
             //}
         }
 
-        private async void OnRecordStop(AudioChunk recordedAudio)
+        private void OnRecordStop(AudioChunk recordedAudio)
         {
-            //buttonText.text = "Record";
+            if (toggleOffRecord)
+            {
+                return;
+            }
+            //recordText.text = "Record";
             //_buffer = "";
 
             //var sw = new Stopwatch();
             //sw.Start();
 
             //var res = await whisper.GetTextAsync(recordedAudio.Data, recordedAudio.Frequency, recordedAudio.Channels);
-            //if (res == null || !outputText) 
+            //if (res == null || !chatText) 
             //    return;
 
             //var time = sw.ElapsedMilliseconds;
@@ -130,7 +191,7 @@ namespace Whisper.Samples
             //if (printLanguage)
             //    text += $"\n\nLanguage: {res.Language}";
 
-            //outputText.text = text;
+            //chatText.text = text;
             //UiUtils.ScrollDown(scroll);
 
             var audioClip = AudioClip.Create("echo", recordedAudio.Data.Length, recordedAudio.Channels, recordedAudio.Frequency, false);
@@ -143,7 +204,7 @@ namespace Whisper.Samples
             StartCoroutine(SendAudioToAPI(audioClip));
 
             //microphoneRecord.StartRecord();
-            //buttonText.text = "Stop";
+            //recordText.text = "Stop";
         }
 
         byte[] AudioClipToWav(AudioClip audioClip)
@@ -209,11 +270,11 @@ namespace Whisper.Samples
         {
             byte[] wavData = AudioClipToWav(audioClip);
 
-            string endpoint = apiUrl;
+            string endpoint = restApiClient.inputFieldIpAddress.text + ":7839" + "/recognize";
 
             WWWForm form = new WWWForm();
             form.AddBinaryData("audio_file", wavData, "audio.wav", "audio/wav");
-            form.AddField("language", restApiClient.language);
+            form.AddField("language", restApiClient.dropDownLanguage.options[restApiClient.dropDownLanguage.value].text);
 
             using (UnityWebRequest request = UnityWebRequest.Post(endpoint, form))
             {
@@ -252,7 +313,9 @@ namespace Whisper.Samples
                         }
                     }
 
-                    //outputText.text = response.text;
+                    //chatText.text = response.text;
+                    chatText.text += "\n\n" + restApiClient.inputFieldUsername.text + " : " + response.text;
+                    ScrollDown();
                     restApiClient.SendTextAndPlayAudio(response.text, onAudioDonePlaying);
 
 
@@ -289,11 +352,11 @@ namespace Whisper.Samples
 
         //private void OnNewSegment(WhisperSegment segment)
         //{
-        //    if (!streamSegments || !outputText)
+        //    if (!streamSegments || !chatText)
         //        return;
 
         //    _buffer += segment.Text;
-        //    outputText.text = _buffer + "...";
+        //    chatText.text = _buffer + "...";
         //    UiUtils.ScrollDown(scroll);
         //}
     }
