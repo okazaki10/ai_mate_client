@@ -51,25 +51,42 @@ public class RestApiClient : MonoBehaviour
     [Header("Audio Settings")]
     public AudioSource audioSource;
     public TMP_Text chatText;
-    public string name;
-    public string language;
 
     public InputField inputFieldUsername;
-    public TMP_Dropdown dropDownLanguage;
     public InputField inputFieldIpAddress;
     public ScrollRect scrollRectChat;
+    public Button buttonDeleteLastChat;
+    public TMP_InputField inputFieldVadThd;
+    public TMP_InputField inputFieldVadStopTime;
+    public MicrophoneRecord microphoneRecord;
+    public LocaleDropdown localeDropDown;
 
     private void Start()
     {
         inputFieldIpAddress.text = "http://127.0.0.1";
         inputFieldUsername.text = "raka";
+        inputFieldVadThd.text = "1.1";
+        inputFieldVadStopTime.text = "3";
+
+        onApplySettings();
+
+        // Get system font
+        Font systemFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        // Or load a specific system font if available
+        // Font systemFont = Font.CreateDynamicFontFromOSFont("Arial", 16);
+
+        // Create TMP font asset from system font
+        TMP_FontAsset tmpFontAsset = TMP_FontAsset.CreateFontAsset(systemFont);
+        chatText.font = tmpFontAsset;
+
         // Get AudioSource component if not assigned
         if (audioSource == null)
             audioSource = GetComponent<AudioSource>();
 
+        buttonDeleteLastChat.onClick.AddListener(onButtonDeleteLastChat);
         StartCoroutine(getChats(onSuccess: (response) =>
         {
-            chatText.text += response.data;
+            chatText.text = response.data;
             ScrollDown();
         },
             onError: (error) =>
@@ -78,6 +95,34 @@ public class RestApiClient : MonoBehaviour
             }
            )
         );
+    }
+
+    private void onApplySettings()
+    {
+        try
+        {
+            microphoneRecord.vadThd = float.Parse(inputFieldVadThd.text);
+            microphoneRecord.vadStopTime = float.Parse(inputFieldVadStopTime.text);
+        }
+        catch (FormatException)
+        {
+            print($"Error: Could not parse float.");
+        }
+    }
+    
+    private void onButtonDeleteLastChat()
+    {
+        StartCoroutine(deleteLastChat(onSuccess: (response) =>
+        {
+            chatText.text = response.data;
+            ScrollDown();
+        },
+         onError: (error) =>
+         {
+             Debug.LogError($"Failed to fetch chats: {error}");
+         }
+        )
+     );
     }
 
     // Method to send text and receive audio response
@@ -93,7 +138,7 @@ public class RestApiClient : MonoBehaviour
         {
             name = inputFieldUsername.text,
             prompt = text,
-            language = dropDownLanguage.options[dropDownLanguage.value].text
+            language = localeDropDown.GetSelectedLocaleCode()
         };
 
         string jsonData = JsonUtility.ToJson(requestData);
@@ -147,6 +192,50 @@ public class RestApiClient : MonoBehaviour
     {
         // Create UnityWebRequest
         using (UnityWebRequest request = new UnityWebRequest(inputFieldIpAddress.text + ":7874" + "/get-chat", "GET"))
+        {
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            //// Add API key if provided
+            //if (!string.IsNullOrEmpty(apiKey))
+            //{
+            //    request.SetRequestHeader("Authorization", "Bearer " + apiKey);
+            //}
+
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                string error = $"Request failed: {request.error} - {request.responseCode}";
+                Debug.LogError(error);
+                onError?.Invoke(error);
+                yield break;
+            }
+
+            string responseText = request.downloadHandler.text;
+
+            // Parse response outside of try-catch to avoid yield issues
+            var response = ParseApiResponse<String>(responseText);
+
+            if (response == null)
+            {
+                string error = "Failed to parse API response";
+                Debug.LogError(error);
+                onError?.Invoke(error);
+                yield break;
+            }
+
+            Debug.Log($"API Response Status: {response.status}");
+            Debug.Log($"Generated Text: {response.data}");
+
+            onSuccess?.Invoke(response);
+        }
+    }
+
+    private IEnumerator deleteLastChat(Action<ApiResponse<String>> onSuccess, Action<string> onError)
+    {
+        // Create UnityWebRequest
+        using (UnityWebRequest request = new UnityWebRequest(inputFieldIpAddress.text + ":7874" + "/delete-last-chat", "DELETE"))
         {
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");

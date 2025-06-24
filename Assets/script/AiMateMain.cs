@@ -146,14 +146,14 @@ namespace Whisper.Samples
             if (!toggleOffRecord)
             {
                 microphoneRecord.StartRecord();
-                recordText.text = "Stop";
+                recordText.text = "Stop Record";
             }
         }
 
         private void stopRecord()
         {
             microphoneRecord.StopRecord();
-            recordText.text = "Record";
+            recordText.text = "Start Record";
         }
 
         private void OnVadDetected(bool vad)
@@ -274,7 +274,7 @@ namespace Whisper.Samples
 
             WWWForm form = new WWWForm();
             form.AddBinaryData("audio_file", wavData, "audio.wav", "audio/wav");
-            form.AddField("language", restApiClient.dropDownLanguage.options[restApiClient.dropDownLanguage.value].text);
+            form.AddField("language", restApiClient.localeDropDown.GetSelectedLocaleCode());
 
             using (UnityWebRequest request = UnityWebRequest.Post(endpoint, form))
             {
