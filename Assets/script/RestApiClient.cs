@@ -50,7 +50,7 @@ public class RestApiClient : MonoBehaviour
 
     [Header("Audio Settings")]
     public AudioSource audioSource;
-    public TMP_Text chatText;
+    public Text chatText;
 
     public InputField inputFieldUsername;
     public InputField inputFieldIpAddress;
@@ -69,15 +69,6 @@ public class RestApiClient : MonoBehaviour
         inputFieldVadStopTime.text = "3";
 
         onApplySettings();
-
-        // Get system font
-        Font systemFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        // Or load a specific system font if available
-        // Font systemFont = Font.CreateDynamicFontFromOSFont("Arial", 16);
-
-        // Create TMP font asset from system font
-        TMP_FontAsset tmpFontAsset = TMP_FontAsset.CreateFontAsset(systemFont);
-        chatText.font = tmpFontAsset;
 
         // Get AudioSource component if not assigned
         if (audioSource == null)
