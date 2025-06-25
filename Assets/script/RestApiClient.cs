@@ -50,7 +50,7 @@ public class RestApiClient : MonoBehaviour
 
     [Header("Audio Settings")]
     public AudioSource audioSource;
-    public Text chatText;
+    public TMP_Text chatText;
 
     public InputField inputFieldUsername;
     public InputField inputFieldIpAddress;

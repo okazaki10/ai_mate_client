@@ -24,7 +24,7 @@ namespace Whisper.Samples
         [Header("UI")]
         public Button buttonRecord;
         public Text recordText;
-        public Text chatText;
+        public TMP_Text chatText;
         public Text timeText;
         public TMP_Dropdown languageDropdown;
         public Toggle translateToggle;
