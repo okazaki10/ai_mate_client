@@ -8,10 +8,7 @@ using static UnityEngine.ParticleSystem;
 using UnityEngine.UI;
 using System.Reflection;
 using System.Linq;
-
-
-
-
+using SFB;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -23,14 +20,16 @@ public class VRMAutoLoader : MonoBehaviour
     public Transform parentTransform; // Optional parent for loaded models
     public bool destroyPreviousModel = true;
 
-    public GameObject mainModel;
+    public VRMModelManager vrmModelManager;
     public GameObject customModelOutput;
     public RuntimeAnimatorController animatorController;
     public GameObject componentTemplatePrefab;
     public VRMAdvancedAudioMouth vRMAdvancedAudioMouth;
+    public DragAndDrop dragAndDrop;
 
     private GameObject loadedModel;
     private GameObject currentModel;
+    private bool isLoading = false;
 
     void Start()
     {
@@ -43,35 +42,23 @@ public class VRMAutoLoader : MonoBehaviour
         // Press 'L' key to open file browser and load VRM
         if (Input.GetKeyDown(KeyCode.L))
         {
-            LoadVRMWithFileBrowser();
+            OpenFileDialogAndLoadVRM();
         }
     }
 
-    [ContextMenu("Load VRM File")]
-    public void LoadVRMWithFileBrowser()
+    public void OpenFileDialogAndLoadVRM()
     {
-#if UNITY_EDITOR
-        // Use Unity Editor file panel
-        string path = EditorUtility.OpenFilePanel("Select VRM File", "", "vrm");
-        if (!string.IsNullOrEmpty(path))
+        if (isLoading) return;
+
+        isLoading = true;
+        var extensions = new[] { new ExtensionFilter("Model Files", "vrm") };
+        string[] paths = StandaloneFileBrowser.OpenFilePanel("Select Model File", "", extensions, false);
+        if (paths.Length > 0 && !string.IsNullOrEmpty(paths[0]))
         {
-            _ = LoadVRMFromPath(path);
+            _ = LoadVRMFromPath(paths[0]);
         }
-#else
-        // For runtime builds, use SimpleFileBrowser or similar
-        Debug.LogWarning("File browser not available in build. Use LoadVRMFromPath() directly with file path.");
-        
-        // Alternative: Use a predefined path or implement a runtime file browser
-        string defaultPath = Path.Combine(Application.persistentDataPath, "Models");
-        if (Directory.Exists(defaultPath))
-        {
-            string[] vrmFiles = Directory.GetFiles(defaultPath, "*.vrm");
-            if (vrmFiles.Length > 0)
-            {
-                _ = LoadVRMFromPath(vrmFiles[0]); // Load first VRM found
-            }
-        }
-#endif
+
+        isLoading = false;
     }
 
     public async Task LoadVRMFromPath(string path)
@@ -164,16 +151,16 @@ public class VRMAutoLoader : MonoBehaviour
             skinnedMesh.enabled = true;
     }
 
-    private void DisableMainModel()
+    private void DisableVRMModel()
     {
-        if (mainModel != null)
-            mainModel.SetActive(false);
+        if (vrmModelManager.mainModel != null)
+            vrmModelManager.mainModel.SetActive(false);
     }
 
-    private void EnableMainModel()
+    private void EnableVRMModel()
     {
-        if (mainModel != null)
-            mainModel.SetActive(true);
+        if (vrmModelManager.mainModel != null)
+            vrmModelManager.mainModel.SetActive(true);
     }
 
     private void ClearPreviousCustomModel(bool skipRawImageCleanup = false)
@@ -182,7 +169,7 @@ public class VRMAutoLoader : MonoBehaviour
         {
             foreach (Transform child in customModelOutput.transform)
             {
-                if (child.gameObject == mainModel)
+                if (child.gameObject == vrmModelManager.mainModel)
                     continue;
                 CleanupMaterialsAndTextures(child.gameObject);
                 CleanupRawImages(child.gameObject);
@@ -286,19 +273,21 @@ public class VRMAutoLoader : MonoBehaviour
 
     private void FinalizeLoadedModel(GameObject loadedModel, string path)
     {
-        DisableMainModel();
+        DisableVRMModel();
         ClearPreviousCustomModel();
 
         loadedModel.transform.SetParent(customModelOutput.transform, false);
-        loadedModel.transform.localPosition = mainModel.transform.localPosition;
-        loadedModel.transform.localRotation = mainModel.transform.localRotation;
-        loadedModel.transform.localScale = mainModel.transform.localScale;
+        loadedModel.transform.localPosition = vrmModelManager.mainModel.transform.localPosition;
+        loadedModel.transform.localRotation = vrmModelManager.mainModel.transform.localRotation;
+        loadedModel.transform.localScale = vrmModelManager.mainModel.transform.localScale;
         currentModel = loadedModel;
 
         EnableSkinnedMeshRenderers(loadedModel);
         AssignAnimatorController(loadedModel);
         InjectComponentsFromPrefab(componentTemplatePrefab, currentModel);
-        vRMAdvancedAudioMouth.vrmBlendShapeProxy = currentModel.GetComponent<VRMBlendShapeProxy>();
+
+        vrmModelManager.vrmBlendShapeProxy = currentModel.GetComponent<VRMBlendShapeProxy>();
+        vrmModelManager.animator = currentModel.GetComponent<Animator>();
     }
 
     // Override this method to add custom behavior after VRM loads

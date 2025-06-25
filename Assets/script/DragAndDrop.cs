@@ -6,6 +6,8 @@ public class DragAndDrop : MonoBehaviour
     private Vector3 offset;
     private Camera cam;
 
+    public VRMModelManager vrmModelManager;
+
     void Start()
     {
         // Get the main camera
@@ -16,6 +18,7 @@ public class DragAndDrop : MonoBehaviour
 
     void OnMouseDown()
     {
+        vrmModelManager.animator.SetBool("isDragging", true);
         // Calculate offset between mouse position and object position
         Vector3 mousePos = GetMouseWorldPosition();
         offset = transform.position - mousePos;
@@ -34,6 +37,7 @@ public class DragAndDrop : MonoBehaviour
 
     void OnMouseUp()
     {
+        vrmModelManager.animator.SetBool("isDragging", false);
         isDragging = false;
     }
 

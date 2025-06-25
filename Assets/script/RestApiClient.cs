@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using TMPro;
 using UnityEngine;
@@ -17,8 +18,8 @@ public class ApiResponse<T>
 [Serializable]
 public class ActionParams
 {
-    public ArrayList<string> emotions = new ArrayList<string>();
-    public ArrayList<string> actions = new ArrayList<string>();
+    public List<string> emotions = new List<string>();
+    public List<string> actions = new List<string>();
 }
 
 [Serializable]
@@ -31,7 +32,7 @@ public class ApiData
     public int prompt_token;
     public int output_token;
     public string base64_audio;
-    public ActionParams actionParams;
+    public ActionParams action_params;
 }
 
 [Serializable]
@@ -390,13 +391,14 @@ public class RestApiClient : MonoBehaviour
     }
 
     // Convenience method to send text and automatically play returned audio
-    public void SendTextAndPlayAudio(string text, Action onAudioDonePlaying)
+    public void SendTextAndPlayAudio(string text, Action<ApiResponse<ApiData>> onSuccess = null, Action onAudioDonePlaying = null)
     {
         SendTextRequest(text,
             onSuccess: (response) =>
             {
                 chatText.text += "\n\n" + response.data.character_name + " : " + response.data.generated_text;
                 ScrollDown();
+                onSuccess?.Invoke(response);
                 if (!string.IsNullOrEmpty(response.data.base64_audio))
                 {
                     PlayBase64Audio(response.data.base64_audio, onAudioDonePlaying);

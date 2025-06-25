@@ -6,7 +6,7 @@ public class VRMAdvancedAudioMouth : MonoBehaviour
 {
     [Header("Components")]
     public AudioSource audioSource;
-    public VRMBlendShapeProxy vrmBlendShapeProxy;
+    public VRMModelManager vrmModelManager;
 
     [Header("Audio Settings")]
     [Range(0f, 2000f)]
@@ -42,12 +42,12 @@ public class VRMAdvancedAudioMouth : MonoBehaviour
     void Start()
     {
         // Get VRM BlendShape Proxy if not assigned
-        if (vrmBlendShapeProxy == null)
-            vrmBlendShapeProxy = GetComponent<VRMBlendShapeProxy>();
+        if (vrmModelManager.vrmBlendShapeProxy == null)
+            vrmModelManager.vrmBlendShapeProxy = GetComponent<VRMBlendShapeProxy>();
 
-        if (vrmBlendShapeProxy == null)
+        if (vrmModelManager.vrmBlendShapeProxy == null)
         {
-            Debug.LogError("VRMBlendShapeProxy not found! Make sure this is attached to a VRM avatar.");
+            Debug.LogError("vrmModelManager.vrmBlendShapeProxy not found! Make sure this is attached to a VRM avatar.");
         }
     }
 
@@ -126,14 +126,14 @@ public class VRMAdvancedAudioMouth : MonoBehaviour
 
     private void ApplyMouthShapes(float intensity)
     {
-        if (vrmBlendShapeProxy == null) return;
+        if (vrmModelManager.vrmBlendShapeProxy == null) return;
 
         // Reset all mouth shapes first
-        vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.A), 0f);
-        vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.I), 0f);
-        vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.U), 0f);
-        vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.E), 0f);
-        vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.O), 0f);
+        vrmModelManager.vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.A), 0f);
+        vrmModelManager.vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.I), 0f);
+        vrmModelManager.vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.U), 0f);
+        vrmModelManager.vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.E), 0f);
+        vrmModelManager.vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.O), 0f);
 
         if (intensity > 0.1f)
         {
@@ -146,9 +146,9 @@ public class VRMAdvancedAudioMouth : MonoBehaviour
                 float highIntensity = freqBands[highFreqBand];
 
                 // Map frequencies to mouth shapes
-                vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.A), lowIntensity * aWeight);
-                vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.O), midIntensity * oWeight);
-                vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.I), highIntensity * iWeight);
+                vrmModelManager.vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.A), lowIntensity * aWeight);
+                vrmModelManager.vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.O), midIntensity * oWeight);
+                vrmModelManager.vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.I), highIntensity * iWeight);
             }
             else
             {
@@ -158,15 +158,15 @@ public class VRMAdvancedAudioMouth : MonoBehaviour
 
                 if (variation < 0.33f)
                 {
-                    vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.A), intensity * aWeight);
+                    vrmModelManager.vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.A), intensity * aWeight);
                 }
                 else if (variation < 0.66f)
                 {
-                    vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.O), intensity * oWeight);
+                    vrmModelManager.vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.O), intensity * oWeight);
                 }
                 else
                 {
-                    vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.I), intensity * iWeight);
+                    vrmModelManager.vrmBlendShapeProxy.ImmediatelySetValue(BlendShapeKey.CreateFromPreset(BlendShapePreset.I), intensity * iWeight);
                 }
             }
         }

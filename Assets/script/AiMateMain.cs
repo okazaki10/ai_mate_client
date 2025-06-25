@@ -41,6 +41,8 @@ namespace Whisper.Samples
         public InputField inputFieldMessage;
         public Button buttonSendMessage;
         public ScrollRect scrollRectChat;
+        public VRMModelManager vrmModelManager;
+        public VRMEmotionBlinkController vrmEmotionBlinkController;
 
         private string _buffer;
 
@@ -91,7 +93,7 @@ namespace Whisper.Samples
         private void onSendMessage()
         {
             chatText.text += "\n\n" + restApiClient.inputFieldUsername.text + " : " + inputFieldMessage.text;
-            restApiClient.SendTextAndPlayAudio(inputFieldMessage.text, onAudioDonePlaying);
+            restApiClient.SendTextAndPlayAudio(inputFieldMessage.text, onSuccessFetch, onAudioDonePlaying);
             inputFieldMessage.text = "";
             toggleOffRecord = true;
             stopRecord();
@@ -260,9 +262,34 @@ namespace Whisper.Samples
                 return stream.ToArray();
             }
         }
+ 
+        void onSuccessFetch(ApiResponse<ApiData> response)
+        {
+            print("responsenya " + JsonUtility.ToJson(response.data.action_params));
+            foreach (var emotion in response.data.action_params.emotions)
+            {
+                if (emotion.Contains("HAPPY"))
+                {
+                    vrmEmotionBlinkController.SetHappy();
+                    vrmModelManager.animator.SetInteger("animBaseInt", 4);
+                }
+                else if (emotion.Contains("ANG"))
+                {
+                    vrmEmotionBlinkController.SetAngry();
+                    vrmModelManager.animator.SetInteger("animBaseInt", 2);
+                }
+                else if (emotion.Contains("CONCERN"))
+                {
+                    vrmEmotionBlinkController.SetSad();
+                    vrmModelManager.animator.SetInteger("animBaseInt", 5);
+                }
+            }
+        }
 
         void onAudioDonePlaying()
         {
+            vrmEmotionBlinkController.SetNeutral();
+            vrmModelManager.animator.SetInteger("animBaseInt", 0);
             startRecord();
         }
 
@@ -316,7 +343,7 @@ namespace Whisper.Samples
                     //chatText.text = response.text;
                     chatText.text += "\n\n" + restApiClient.inputFieldUsername.text + " : " + response.text;
                     ScrollDown();
-                    restApiClient.SendTextAndPlayAudio(response.text, onAudioDonePlaying);
+                    restApiClient.SendTextAndPlayAudio(response.text, onSuccessFetch, onAudioDonePlaying);
 
 
                 }
@@ -331,6 +358,7 @@ namespace Whisper.Samples
 
             isProcessing = false;
         }
+        
 
         private void OnLanguageChanged(int ind)
         {
