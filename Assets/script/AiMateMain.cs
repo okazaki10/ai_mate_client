@@ -22,8 +22,7 @@ namespace Whisper.Samples
         public bool printLanguage = true;
 
         [Header("UI")]
-        public Button buttonRecord;
-        public Text recordText;
+        public TMP_Text recordText;
         public TMP_Text chatText;
         public Text timeText;
         public TMP_Dropdown languageDropdown;
@@ -32,19 +31,12 @@ namespace Whisper.Samples
         public ScrollRect scroll;
         public RestApiClient restApiClient;
 
-        public Canvas chatCanvas;
-        public Canvas settingCanvas;
-        public Canvas menuCanvas;
-        public Button buttonToggleChatOnOff;
-        public Button buttonShowSettings;
-        public Button buttonBackFromSettings;
         public InputField inputFieldMessage;
-        public Button buttonSendMessage;
         public ScrollRect scrollRectChat;
         public VRMModelManager vrmModelManager;
         public VRMEmotionBlinkController vrmEmotionBlinkController;
-
-        private string _buffer;
+        public PopUpMessage popUpMessage;
+        public MenuManager menuManager;
 
         private AudioSource audioSource;
         private bool isProcessing = false;
@@ -56,25 +48,9 @@ namespace Whisper.Samples
         private void Awake()
         {
             audioSource = GetComponent<AudioSource>();
-            //whisper.OnNewSegment += OnNewSegment;
-            //whisper.OnProgress += OnProgressHandler;
 
             microphoneRecord.OnRecordStop += OnRecordStop;
             microphoneRecord.OnVadChanged += OnVadDetected;
-
-            buttonRecord.onClick.AddListener(OnButtonPressed);
-            buttonToggleChatOnOff.onClick.AddListener(onToggleChatOnOff);
-            buttonShowSettings.onClick.AddListener(onShowSettings);
-            buttonBackFromSettings.onClick.AddListener(onBackFromSettings);
-            buttonSendMessage.onClick.AddListener(onSendMessage);
-            inputFieldMessage.onEndEdit.AddListener(OnInputEndEdit);
-
-            //languageDropdown.value = languageDropdown.options
-            //    .FindIndex(op => op.text == whisper.language);
-            //languageDropdown.onValueChanged.AddListener(OnLanguageChanged);
-
-            //translateToggle.isOn = whisper.translateToEnglish;
-            //translateToggle.onValueChanged.AddListener(OnTranslateChanged);
 
             vadToggle.isOn = microphoneRecord.vadStop;
             vadToggle.onValueChanged.AddListener(OnVadChanged);
@@ -82,7 +58,7 @@ namespace Whisper.Samples
             startRecord();
         }
 
-        void OnInputEndEdit(string input)
+        public void OnInputEndEdit(string input)
         {
             if (Input.GetKeyDown(KeyCode.Return) && inputFieldMessage.text != "")
             {
@@ -90,10 +66,10 @@ namespace Whisper.Samples
             }
         }
 
-        private void onSendMessage()
+        public void onSendMessage()
         {
-            chatText.text += "\n\n" + restApiClient.inputFieldUsername.text + " : " + inputFieldMessage.text;
-            restApiClient.SendTextAndPlayAudio(inputFieldMessage.text, onSuccessFetch, onAudioDonePlaying);
+            chatText.text += "\n\n" + menuManager.inputFieldUsername.text + " : " + inputFieldMessage.text;
+            restApiClient.SendTextAndPlayAudio(inputFieldMessage.text, onSuccessFetch, onErrorFetch, onAudioDonePlaying);
             inputFieldMessage.text = "";
             toggleOffRecord = true;
             stopRecord();
@@ -107,29 +83,12 @@ namespace Whisper.Samples
             scrollRectChat.verticalNormalizedPosition = 0f;
         }
 
-        private void onToggleChatOnOff()
-        {
-            chatCanvas.enabled = !chatCanvas.enabled;
-        }
-
-        private void onShowSettings()
-        {
-            settingCanvas.enabled = true;
-            menuCanvas.enabled = false;
-        }
-
-        private void onBackFromSettings()
-        {
-            settingCanvas.enabled = false;
-            menuCanvas.enabled = true;
-        }
-
         private void OnVadChanged(bool vadStop)
         {
             microphoneRecord.vadStop = vadStop;
         }
 
-        private void OnButtonPressed()
+        public void OnButtonRecordPressed()
         {
             if (toggleOffRecord)
             {
@@ -175,26 +134,6 @@ namespace Whisper.Samples
             {
                 return;
             }
-            //recordText.text = "Record";
-            //_buffer = "";
-
-            //var sw = new Stopwatch();
-            //sw.Start();
-
-            //var res = await whisper.GetTextAsync(recordedAudio.Data, recordedAudio.Frequency, recordedAudio.Channels);
-            //if (res == null || !chatText) 
-            //    return;
-
-            //var time = sw.ElapsedMilliseconds;
-            //var rate = recordedAudio.Length / (time * 0.001f);
-            //timeText.text = $"Time: {time} ms\nRate: {rate:F1}x";
-
-            //var text = res.Result;
-            //if (printLanguage)
-            //    text += $"\n\nLanguage: {res.Language}";
-
-            //chatText.text = text;
-            //UiUtils.ScrollDown(scroll);
 
             var audioClip = AudioClip.Create("echo", recordedAudio.Data.Length, recordedAudio.Channels, recordedAudio.Frequency, false);
             audioClip.SetData(recordedAudio.Data, 0);
@@ -204,9 +143,6 @@ namespace Whisper.Samples
             }
 
             StartCoroutine(SendAudioToAPI(audioClip));
-
-            //microphoneRecord.StartRecord();
-            //recordText.text = "Stop";
         }
 
         byte[] AudioClipToWav(AudioClip audioClip)
@@ -265,7 +201,7 @@ namespace Whisper.Samples
  
         void onSuccessFetch(ApiResponse<ApiData> response)
         {
-            print("responsenya " + JsonUtility.ToJson(response.data.action_params));
+            popUpMessage.showPopUpForever(response.data.generated_text);
             foreach (var emotion in response.data.action_params.emotions)
             {
                 if (emotion.Contains("HAPPY"))
@@ -286,8 +222,16 @@ namespace Whisper.Samples
             }
         }
 
+        void onErrorFetch()
+        {
+            vrmEmotionBlinkController.SetNeutral();
+            vrmModelManager.animator.SetInteger("animBaseInt", 0);
+            startRecord();
+        }
+
         void onAudioDonePlaying()
         {
+            popUpMessage.HidePopUp();
             vrmEmotionBlinkController.SetNeutral();
             vrmModelManager.animator.SetInteger("animBaseInt", 0);
             startRecord();
@@ -297,7 +241,7 @@ namespace Whisper.Samples
         {
             byte[] wavData = AudioClipToWav(audioClip);
 
-            string endpoint = restApiClient.inputFieldIpAddress.text + ":7839" + "/recognize";
+            string endpoint = menuManager.inputFieldIpAddress.text + ":7839" + "/recognize";
 
             WWWForm form = new WWWForm();
             form.AddBinaryData("audio_file", wavData, "audio.wav", "audio/wav");
@@ -309,6 +253,7 @@ namespace Whisper.Samples
 
                 if (request.result != UnityWebRequest.Result.Success)
                 {
+                    popUpMessage.showMessage($"API request failed: {request.error}, please run start_whisperx_speech_recognition.bat");
                     UnityEngine.Debug.Log($"API request failed: {request.error}");
                     //OnErrorOccurred?.Invoke($"API request failed: {request.error}");
                     startRecord();
@@ -341,9 +286,9 @@ namespace Whisper.Samples
                     }
 
                     //chatText.text = response.text;
-                    chatText.text += "\n\n" + restApiClient.inputFieldUsername.text + " : " + response.text;
+                    chatText.text += "\n\n" + menuManager.inputFieldUsername.text + " : " + response.text;
                     ScrollDown();
-                    restApiClient.SendTextAndPlayAudio(response.text, onSuccessFetch, onAudioDonePlaying);
+                    restApiClient.SendTextAndPlayAudio(response.text, onSuccessFetch, onErrorFetch, onAudioDonePlaying);
 
 
                 }
@@ -351,42 +296,14 @@ namespace Whisper.Samples
                 {
                     UnityEngine.Debug.Log($"Failed to parse API response: {e.Message}");
                     //OnErrorOccurred?.Invoke($"Failed to parse response: {e.Message}");
+                    popUpMessage.showMessage(e.Message);
                     startRecord();
                 }
             }
 
-
             isProcessing = false;
         }
         
-
-        private void OnLanguageChanged(int ind)
-        {
-            var opt = languageDropdown.options[ind];
-            //whisper.language = opt.text;
-        }
-
-        private void OnTranslateChanged(bool translate)
-        {
-            //whisper.translateToEnglish = translate;
-        }
-
-        private void OnProgressHandler(int progress)
-        {
-            if (!timeText)
-                return;
-            timeText.text = $"Progress: {progress}%";
-        }
-
-        //private void OnNewSegment(WhisperSegment segment)
-        //{
-        //    if (!streamSegments || !chatText)
-        //        return;
-
-        //    _buffer += segment.Text;
-        //    chatText.text = _buffer + "...";
-        //    UiUtils.ScrollDown(scroll);
-        //}
     }
 }
 

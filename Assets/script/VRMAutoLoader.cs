@@ -25,7 +25,7 @@ public class VRMAutoLoader : MonoBehaviour
     public RuntimeAnimatorController animatorController;
     public GameObject componentTemplatePrefab;
     public VRMAdvancedAudioMouth vRMAdvancedAudioMouth;
-    public DragAndDrop dragAndDrop;
+    public MenuManager menuManager;
 
     private GameObject loadedModel;
     private GameObject currentModel;
@@ -39,11 +39,7 @@ public class VRMAutoLoader : MonoBehaviour
 
     void Update()
     {
-        // Press 'L' key to open file browser and load VRM
-        if (Input.GetKeyDown(KeyCode.L))
-        {
-            OpenFileDialogAndLoadVRM();
-        }
+    
     }
 
     public void OpenFileDialogAndLoadVRM()
@@ -55,6 +51,7 @@ public class VRMAutoLoader : MonoBehaviour
         string[] paths = StandaloneFileBrowser.OpenFilePanel("Select Model File", "", extensions, false);
         if (paths.Length > 0 && !string.IsNullOrEmpty(paths[0]))
         {
+            menuManager.inputFieldVrmPath.text = paths[0];
             _ = LoadVRMFromPath(paths[0]);
         }
 
@@ -281,6 +278,7 @@ public class VRMAutoLoader : MonoBehaviour
         loadedModel.transform.localRotation = vrmModelManager.mainModel.transform.localRotation;
         loadedModel.transform.localScale = vrmModelManager.mainModel.transform.localScale;
         currentModel = loadedModel;
+        currentModel.SetActive(true);
 
         EnableSkinnedMeshRenderers(loadedModel);
         AssignAnimatorController(loadedModel);
@@ -288,6 +286,16 @@ public class VRMAutoLoader : MonoBehaviour
 
         vrmModelManager.vrmBlendShapeProxy = currentModel.GetComponent<VRMBlendShapeProxy>();
         vrmModelManager.animator = currentModel.GetComponent<Animator>();
+    }
+
+    public void useDefaultModel()
+    {
+        EnableVRMModel();
+
+        currentModel.SetActive(false);
+
+        vrmModelManager.vrmBlendShapeProxy = vrmModelManager.mainModel.GetComponent<VRMBlendShapeProxy>();
+        vrmModelManager.animator = vrmModelManager.mainModel.GetComponent<Animator>();
     }
 
     // Override this method to add custom behavior after VRM loads

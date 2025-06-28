@@ -27,7 +27,6 @@ public class ScrollToScale : MonoBehaviour
         if (rightClick)
         {
             mainMenuCanvas.enabled = !mainMenuCanvas.enabled;
-            print("right click");
         }
     }
 }

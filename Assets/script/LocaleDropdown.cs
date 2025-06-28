@@ -4,14 +4,16 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
 
 public class LocaleDropdown : MonoBehaviour
 {
-    [SerializeField] private TMP_Dropdown dropdown;
+    public TMP_Dropdown dropdown;
+
 
     private void Start()
     {
-        PopulateLocaleDropdown();
+      
     }
 
     private void PopulateLocaleDropdown()
@@ -107,13 +109,10 @@ public class LocaleDropdown : MonoBehaviour
         return "en"; // default fallback
     }
 
-    // Event handler for dropdown value changed
-    public void OnLocaleChanged()
+    public void setLocale(int index)
     {
-        string selectedLocale = GetSelectedLocaleCode();
-        Debug.Log($"Selected locale: {selectedLocale}");
-
-        // Add your locale change logic here
-        // For example: LocalizationManager.SetLocale(selectedLocale);
+        PopulateLocaleDropdown();
+        dropdown.value = index;
+        dropdown.RefreshShownValue();
     }
 }
