@@ -23,6 +23,7 @@ public class MenuManager : MonoBehaviour
 
     public MicrophoneRecord microphoneRecord;
     public LocaleDropdown localeDropdown;
+    public RestApiClient restApiClient;
 
   
 
@@ -118,6 +119,12 @@ public class MenuManager : MonoBehaviour
         PlayerPrefs.SetString(CHARACTER_NAME, "Hatsune Miku");
         onSaveSettings();
         onLoadSettings();
+    }
+
+    public void onResetToDefault()
+    {
+        resetToDefault();
+        restApiClient.onResetToDefault();
     }
 
     private void loadMicrophoneSettings()

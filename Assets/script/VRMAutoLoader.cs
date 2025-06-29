@@ -26,6 +26,7 @@ public class VRMAutoLoader : MonoBehaviour
     public GameObject componentTemplatePrefab;
     public VRMAdvancedAudioMouth vRMAdvancedAudioMouth;
     public MenuManager menuManager;
+    public PopUpMessage popUpMessage;
 
     private GameObject loadedModel;
     private GameObject currentModel;
@@ -63,6 +64,7 @@ public class VRMAutoLoader : MonoBehaviour
         if (string.IsNullOrEmpty(path) || !File.Exists(path))
         {
             Debug.LogError($"VRM file not found at path: {path}");
+            popUpMessage.showMessage($"VRM file not found at path: {path}");
             return;
         }
 
@@ -114,6 +116,7 @@ public class VRMAutoLoader : MonoBehaviour
                 else
                 {
                     Debug.LogError("Failed to load VRM: Root object is null");
+                    popUpMessage.showMessage("Failed to load VRM: Root object is null");
                 }
             }
 
@@ -139,6 +142,7 @@ public class VRMAutoLoader : MonoBehaviour
         catch (System.Exception e)
         {
             Debug.LogError($"Error loading VRM file: {e.Message}\n{e.StackTrace}");
+            popUpMessage.showMessage($"Error loading VRM file: {e.Message}\n{e.StackTrace}");
         }
     }
 

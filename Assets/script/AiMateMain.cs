@@ -27,7 +27,6 @@ namespace Whisper.Samples
         public Text timeText;
         public TMP_Dropdown languageDropdown;
         public Toggle translateToggle;
-        public Toggle vadToggle;
         public ScrollRect scroll;
         public RestApiClient restApiClient;
 
@@ -52,8 +51,6 @@ namespace Whisper.Samples
             microphoneRecord.OnRecordStop += OnRecordStop;
             microphoneRecord.OnVadChanged += OnVadDetected;
 
-            vadToggle.isOn = microphoneRecord.vadStop;
-            vadToggle.onValueChanged.AddListener(OnVadChanged);
 
             startRecord();
         }
@@ -83,10 +80,6 @@ namespace Whisper.Samples
             scrollRectChat.verticalNormalizedPosition = 0f;
         }
 
-        private void OnVadChanged(bool vadStop)
-        {
-            microphoneRecord.vadStop = vadStop;
-        }
 
         public void OnButtonRecordPressed()
         {
