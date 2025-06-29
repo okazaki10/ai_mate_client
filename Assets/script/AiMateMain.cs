@@ -3,6 +3,7 @@ using System.Collections;
 using System.Diagnostics;
 using System.IO;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.Networking;
@@ -197,20 +198,48 @@ namespace Whisper.Samples
             popUpMessage.showPopUpForever(response.data.generated_text);
             foreach (var emotion in response.data.action_params.emotions)
             {
-                if (emotion.Contains("HAPPY"))
+                if (emotion.ContainsInsensitive("SHY"))
                 {
-                    vrmEmotionBlinkController.SetHappy();
-                    vrmModelManager.animator.SetInteger("animBaseInt", 4);
+                    vrmEmotionBlinkController.SetSad();
+                    vrmModelManager.animator.SetInteger("animBaseInt", 1);
                 }
-                else if (emotion.Contains("ANG"))
+                else if (emotion.ContainsInsensitive("ANG"))
                 {
                     vrmEmotionBlinkController.SetAngry();
                     vrmModelManager.animator.SetInteger("animBaseInt", 2);
                 }
-                else if (emotion.Contains("CONCERN"))
+                else if (emotion.ContainsInsensitive("SURPRISE"))
+                {
+                    vrmEmotionBlinkController.SetNeutral();
+                    vrmModelManager.animator.SetInteger("animBaseInt", 3);
+                }
+                else if (emotion.ContainsInsensitive("HAPPY"))
+                {
+                    vrmEmotionBlinkController.SetHappy();
+                    vrmModelManager.animator.SetInteger("animBaseInt", 4);
+                }
+                else if (emotion.ContainsInsensitive("CONCERN"))
                 {
                     vrmEmotionBlinkController.SetSad();
                     vrmModelManager.animator.SetInteger("animBaseInt", 5);
+                }
+                else if (emotion.ContainsInsensitive("CURIOUS"))
+                {
+                    vrmEmotionBlinkController.SetNeutral();
+                    vrmModelManager.animator.SetInteger("animBaseInt", 6);
+                }
+                else if (emotion.ContainsInsensitive("SAD"))
+                {
+                    vrmEmotionBlinkController.SetSad();
+                    vrmModelManager.animator.SetInteger("animBaseInt", 7);
+                }
+            }
+            foreach (var action in response.data.action_params.actions)
+            {
+                if (action.ContainsInsensitive("WAVE"))
+                {
+                    vrmEmotionBlinkController.SetHappy();
+                    vrmModelManager.animator.SetInteger("animBaseInt", 8);
                 }
             }
         }

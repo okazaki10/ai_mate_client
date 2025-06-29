@@ -114,7 +114,7 @@ public class MenuManager : MonoBehaviour
     public void resetToDefault()
     {
         inputFieldIpAddress.text = "http://127.0.0.1";
-        inputFieldVadThd.text = "1.1";
+        inputFieldVadThd.text = "1.05";
         inputFieldVadStopTime.text = "3";
         PlayerPrefs.SetString(CHARACTER_NAME, "Hatsune Miku");
         onSaveSettings();
@@ -134,7 +134,7 @@ public class MenuManager : MonoBehaviour
             inputFieldVadThd.text = PlayerPrefs.GetString(VAD_THD);
             inputFieldVadStopTime.text = PlayerPrefs.GetString(VAD_STOP_TIME);
             microphoneRecord.vadThd = float.Parse(inputFieldVadThd.text);
-            microphoneRecord.vadStopTime = float.Parse(inputFieldVadThd.text);
+            microphoneRecord.vadStopTime = float.Parse(inputFieldVadStopTime.text);
         }
         catch (FormatException)
         {

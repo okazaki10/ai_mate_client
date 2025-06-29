@@ -3604,7 +3604,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.00008392334, y: -34.999973}
+  m_AnchoredPosition: {x: 0.00008392334, y: -34.999996}
   m_SizeDelta: {x: -3, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &364382885
@@ -11306,6 +11306,7 @@ MonoBehaviour:
   componentTemplatePrefab: {fileID: 0}
   vRMAdvancedAudioMouth: {fileID: 1337591126}
   menuManager: {fileID: 1337591131}
+  popUpMessage: {fileID: 0}
 --- !u!114 &1337591129
 MonoBehaviour:
   m_ObjectHideFlags: 0
