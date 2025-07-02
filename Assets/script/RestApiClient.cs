@@ -53,6 +53,15 @@ public class ResponseCharacter
 }
 
 [Serializable]
+public class ResponseSong
+{
+    public string title = "";
+    public string base64_audio_vocal = "";
+    public string base64_audio_instrument = "";
+}
+
+
+[Serializable]
 public class ApiRequest
 {
     public string character_name;
@@ -76,6 +85,13 @@ public class RequestCharacter
     public string vrm_path;
 }
 
+[Serializable]
+public class RequestSong
+{
+    public string character_name;
+    public string url;
+}
+
 public class RestApiClient : MonoBehaviour
 {
     //[Header("API Configuration")]
@@ -84,6 +100,7 @@ public class RestApiClient : MonoBehaviour
 
     [Header("Audio Settings")]
     public AudioSource audioSource;
+    public AudioSource audioSourceInstrument;
     public TMP_Text chatText;
 
     public ScrollRect scrollRectChat;
@@ -96,6 +113,7 @@ public class RestApiClient : MonoBehaviour
     public CharacterDto character = new CharacterDto();
     public List<string> rvcList = new List<string>();
 
+    int runningSongCoroutines = 0;
     private void Start()
     {
         // Get AudioSource component if not assigned
@@ -200,7 +218,7 @@ public class RestApiClient : MonoBehaviour
             {
                 _ = vRMAutoLoader.LoadVRMFromPath(character.vrm_path);
             }
-       
+
         }
         menuManager.inputFieldVrmPath.text = character.vrm_path;
     }
@@ -276,6 +294,55 @@ public class RestApiClient : MonoBehaviour
           }
          )
       );
+    }
+
+    public void onGenerateSong(string url, Action<ApiResponse<ResponseSong>> onSuccess, Action onAudioDonePlaying, Action<string> onError)
+    {
+        var requestData = new RequestSong
+        {
+            character_name = PlayerPrefs.GetString(MenuManager.CHARACTER_NAME),
+            url = url
+        };
+
+        StartCoroutine(generateSong(requestData, onSuccess: (response) =>
+        {
+            print("done fetch song "+response.data.title);
+            StartCoroutine(playAudioAndInstrument(response.data.base64_audio_vocal, response.data.base64_audio_instrument, onAudioDonePlaying));
+            onSuccess.Invoke(response);
+        },
+          onError: (error) =>
+          {
+              Debug.LogError($"Failed to add character: {error}");
+              popUpMessage.showMessage($"Failed to add character: {error}, please run start_server.bat");
+              onError.Invoke(error);
+          }
+         )
+      );
+    }
+
+    IEnumerator playAudioAndInstrument(string base64_audio_vocal, string base64_audio_instrument, Action onAudioDonePlaying)
+    {
+        print("start playing");
+        runningSongCoroutines = 2;
+        StartCoroutine(ConvertAndPlayAudio(base64_audio_vocal, onAudioDonePlaying));
+        StartCoroutine(ConvertAndPlayAudioInstrument(base64_audio_instrument, onAudioDonePlaying));
+        while (runningSongCoroutines > 0)
+        {
+            yield return null;
+        }
+        onAudioDonePlaying.Invoke();
+    }
+
+    IEnumerator playAudio(string base64_audio_vocal, Action onAudioDonePlaying)
+    {
+        print("start playing audio");
+        runningSongCoroutines = 1;
+        StartCoroutine(ConvertAndPlayAudio(base64_audio_vocal, onAudioDonePlaying));
+        while (runningSongCoroutines > 0)
+        {
+            yield return null;
+        }
+        onAudioDonePlaying.Invoke();
     }
 
     public void onDeleteCharacter()
@@ -623,6 +690,54 @@ public class RestApiClient : MonoBehaviour
         }
     }
 
+    private IEnumerator generateSong(RequestSong requestData, Action<ApiResponse<ResponseSong>> onSuccess, Action<string> onError)
+    {
+        string jsonData = JsonUtility.ToJson(requestData);
+        byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonData);
+
+        // Create UnityWebRequest
+        using (UnityWebRequest request = new UnityWebRequest(PlayerPrefs.GetString(MenuManager.IP_ADDRESS) + ":7874" + "/generate-song", "POST"))
+        {
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            //// Add API key if provided
+            //if (!string.IsNullOrEmpty(apiKey))
+            //{
+            //    request.SetRequestHeader("Authorization", "Bearer " + apiKey);
+            //}
+
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                string error = $"Request failed: {request.error} - {request.responseCode}";
+                Debug.LogError(error);
+                onError?.Invoke(error);
+                yield break;
+            }
+
+            string responseText = request.downloadHandler.text;
+
+            // Parse response outside of try-catch to avoid yield issues
+            var response = ParseApiResponse<ResponseSong>(responseText);
+
+            if (response == null)
+            {
+                string error = "Failed to parse API response";
+                Debug.LogError(error);
+                onError?.Invoke(error);
+                yield break;
+            }
+
+            Debug.Log($"API Response Status: {response.status}");
+            Debug.Log($"Generated Text: {response.data}");
+
+            onSuccess?.Invoke(response);
+        }
+    }
+
     private IEnumerator deleteCharacter(RequestCharacter requestData, Action<ApiResponse<String>> onSuccess, Action<string> onError)
     {
         string jsonData = JsonUtility.ToJson(requestData);
@@ -737,18 +852,6 @@ public class RestApiClient : MonoBehaviour
         }
     }
 
-    // Method to convert base64 to AudioClip and play
-    public void PlayBase64Audio(string base64Audio, Action onAudioDonePlaying)
-    {
-        if (string.IsNullOrEmpty(base64Audio))
-        {
-            Debug.LogWarning("No base64 audio data provided");
-            return;
-        }
-
-        StartCoroutine(ConvertAndPlayAudio(base64Audio, onAudioDonePlaying));
-    }
-
     private IEnumerator ConvertAndPlayAudio(string base64Audio, Action onAudioDonePlaying)
     {
         // Convert base64 to byte array and write to file outside of try-catch
@@ -781,15 +884,70 @@ public class RestApiClient : MonoBehaviour
                 {
                     audioSource.clip = clip;
                     audioSource.Play();
+                    print("play vocal");
                     StartCoroutine(WaitForAudioToEnd(onAudioDonePlaying));
                 }
                 else
                 {
+                    runningSongCoroutines--;
                     Debug.LogError("AudioSource or AudioClip is null");
                 }
             }
             else
             {
+                runningSongCoroutines--;
+                Debug.LogError($"Failed to load audio: {www.error}");
+            }
+        }
+
+        // Clean up temporary file
+        CleanupTempFile(tempPath);
+    }
+
+    private IEnumerator ConvertAndPlayAudioInstrument(string base64Audio, Action onAudioDonePlaying)
+    {
+        // Convert base64 to byte array and write to file outside of try-catch
+        byte[] audioBytes = ConvertBase64ToBytes(base64Audio);
+        if (audioBytes == null)
+        {
+            yield break;
+        }
+
+        // Create temporary file path
+        string tempPath = System.IO.Path.Combine(Application.temporaryCachePath, "temp_audio_instrument.wav");
+
+        // Write bytes to file
+        bool fileWritten = WriteAudioFile(tempPath, audioBytes);
+        if (!fileWritten)
+        {
+            yield break;
+        }
+
+        // Load audio clip from file
+        using (UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip("file://" + tempPath, AudioType.WAV))
+        {
+            yield return www.SendWebRequest();
+
+            if (www.result == UnityWebRequest.Result.Success)
+            {
+                AudioClip clip = DownloadHandlerAudioClip.GetContent(www);
+
+                if (audioSourceInstrument != null && clip != null)
+                {
+                    audioSourceInstrument.clip = clip;
+                    audioSourceInstrument.Play();
+                    print("play instrument");
+                    StartCoroutine(WaitForAudioToEndInstrument(onAudioDonePlaying));
+                }
+                else
+                {
+                    runningSongCoroutines--;
+                    Debug.LogError("AudioSource or AudioClip is null");
+                }
+            }
+            else
+            {
+                runningSongCoroutines--;
                 Debug.LogError($"Failed to load audio: {www.error}");
             }
         }
@@ -801,7 +959,13 @@ public class RestApiClient : MonoBehaviour
     private IEnumerator WaitForAudioToEnd(Action onAudioDonePlaying)
     {
         yield return new WaitWhile(() => audioSource.isPlaying);
-        onAudioDonePlaying?.Invoke();
+        runningSongCoroutines--;
+    }
+
+    private IEnumerator WaitForAudioToEndInstrument(Action onAudioDonePlaying)
+    {
+        yield return new WaitWhile(() => audioSourceInstrument.isPlaying);
+        runningSongCoroutines--;
     }
 
     private byte[] ConvertBase64ToBytes(string base64Audio)
@@ -857,7 +1021,7 @@ public class RestApiClient : MonoBehaviour
                 onSuccess?.Invoke(response);
                 if (!string.IsNullOrEmpty(response.data.base64_audio))
                 {
-                    PlayBase64Audio(response.data.base64_audio, onAudioDonePlaying);
+                    StartCoroutine(playAudio(response.data.base64_audio, onAudioDonePlaying));
                 }
                 else
                 {
