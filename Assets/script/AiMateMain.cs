@@ -25,10 +25,7 @@ namespace Whisper.Samples
         [Header("UI")]
         public TMP_Text recordText;
         public TMP_Text chatText;
-        public Text timeText;
         public TMP_Dropdown languageDropdown;
-        public Toggle translateToggle;
-        public ScrollRect scroll;
         public RestApiClient restApiClient;
 
         public InputField inputFieldMessage;
@@ -37,6 +34,7 @@ namespace Whisper.Samples
         public VRMEmotionBlinkController vrmEmotionBlinkController;
         public PopUpMessage popUpMessage;
         public MenuManager menuManager;
+        public SingingAnimation singingAnimation;
 
         private AudioSource audioSource;
         private bool isProcessing = false;
@@ -52,7 +50,7 @@ namespace Whisper.Samples
             microphoneRecord.OnRecordStop += OnRecordStop;
             microphoneRecord.OnVadChanged += OnVadDetected;
 
-
+           
             startRecord();
         }
 
@@ -194,6 +192,7 @@ namespace Whisper.Samples
             }
         }
 
+        bool isGeneratingSong = false;
         void onSuccessFetch(ApiResponse<ApiData> response)
         {
             popUpMessage.showPopUpForever(response.data.generated_text);
@@ -258,21 +257,23 @@ namespace Whisper.Samples
                         vrmEmotionBlinkController.SetNeutral();
                         vrmModelManager.animator.SetInteger("animBaseInt", 0);
                         popUpMessage.SetMessage("Singing in process");
-                        restApiClient.onGenerateSong(url, onSuccesGenerateSongs, onMusicDonePlaying, onErrorGenerateSong);
+                        isGeneratingSong = true;
+                        restApiClient.onGenerateSong(url, onSuccessGenerateSongs, onMusicDonePlaying, onErrorGenerateSong);
                     }
                 }
             }
         }
 
-        void onSuccesGenerateSongs(ApiResponse<ResponseSong> response)
+        void onSuccessGenerateSongs(ApiResponse<ResponseSong> response)
         {
             popUpMessage.SetMessage("Singing : "+response.data.title);
             vrmEmotionBlinkController.SetNeutral();
-            vrmModelManager.animator.SetInteger("animBaseInt", 0);
+            singingAnimation.StartSingingAnimation();
         }
 
         void onErrorGenerateSong(string error)
         {
+            isGeneratingSong = false;
             vrmEmotionBlinkController.SetNeutral();
             vrmModelManager.animator.SetInteger("animBaseInt", 0);
             startRecord();
@@ -290,16 +291,22 @@ namespace Whisper.Samples
             print("audio done playing");
             vrmEmotionBlinkController.SetNeutral();
             vrmModelManager.animator.SetInteger("animBaseInt", 0);
-            popUpMessage.HidePopUp();
-            startRecord();
+            if (!isGeneratingSong)
+            {
+                print("hide pop up");
+                popUpMessage.HidePopUp();
+                startRecord();
+            }
         }
 
         void onMusicDonePlaying()
         {
             print("music done playing");
+            isGeneratingSong = false;
             vrmEmotionBlinkController.SetNeutral();
             vrmModelManager.animator.SetInteger("animBaseInt", 0);
             popUpMessage.HidePopUp();
+            singingAnimation.StopSingingAnimation();
             startRecord();
         }
 

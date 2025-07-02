@@ -9,6 +9,8 @@ using UnityEngine.UI;
 using System.Reflection;
 using System.Linq;
 using SFB;
+using Unity.VisualScripting;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -290,6 +292,23 @@ public class VRMAutoLoader : MonoBehaviour
 
         vrmModelManager.vrmBlendShapeProxy = currentModel.GetComponent<VRMBlendShapeProxy>();
         vrmModelManager.animator = currentModel.GetComponent<Animator>();
+        vrmModelManager.neck = FindInChildrenContaining(currentModel.GetComponent<Transform>(), "Neck");
+        vrmModelManager.spine = FindInChildrenContaining(currentModel.GetComponent<Transform>(), "Spine");
+    }
+
+    private Transform FindInChildrenContaining(Transform parent, string keyword)
+    {
+        if (parent.name.ContainsInsensitive(keyword))
+            return parent;
+
+        for (int i = 0; i < parent.childCount; i++)
+        {
+            Transform result = FindInChildrenContaining(parent.GetChild(i), keyword);
+            if (result != null)
+                return result;
+        }
+
+        return null;
     }
 
     public void useDefaultModel()
@@ -300,6 +319,8 @@ public class VRMAutoLoader : MonoBehaviour
 
         vrmModelManager.vrmBlendShapeProxy = vrmModelManager.mainModel.GetComponent<VRMBlendShapeProxy>();
         vrmModelManager.animator = vrmModelManager.mainModel.GetComponent<Animator>();
+        vrmModelManager.neck = FindInChildrenContaining(vrmModelManager.mainModel.GetComponent<Transform>(), "Neck");
+        vrmModelManager.spine = FindInChildrenContaining(vrmModelManager.mainModel.GetComponent<Transform>(), "Spine");
     }
 
     // Override this method to add custom behavior after VRM loads
