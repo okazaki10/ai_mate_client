@@ -254,8 +254,6 @@ namespace Whisper.Samples
                     print(url);
                     if (url != "")
                     {
-                        vrmEmotionBlinkController.SetNeutral();
-                        vrmModelManager.animator.SetInteger("animBaseInt", 0);
                         popUpMessage.SetMessage("Singing in process");
                         isGeneratingSong = true;
                         restApiClient.onGenerateSong(url, onSuccessGenerateSongs, onMusicDonePlaying, onErrorGenerateSong);
@@ -266,9 +264,9 @@ namespace Whisper.Samples
 
         void onSuccessGenerateSongs(ApiResponse<ResponseSong> response)
         {
-            popUpMessage.SetMessage("Singing : "+response.data.title);
+            popUpMessage.SetMessage("Singing : "+response.data.title+" bpm "+response.data.bpm);
             vrmEmotionBlinkController.SetNeutral();
-            singingAnimation.StartSingingAnimation();
+            singingAnimation.StartSingingAnimation(response.data.bpm);
         }
 
         void onErrorGenerateSong(string error)

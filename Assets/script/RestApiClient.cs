@@ -56,6 +56,7 @@ public class ResponseCharacter
 public class ResponseSong
 {
     public string title = "";
+    public float bpm = 120;
     public string base64_audio_vocal = "";
     public string base64_audio_instrument = "";
 }
