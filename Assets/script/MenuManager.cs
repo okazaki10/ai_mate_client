@@ -94,6 +94,11 @@ public class MenuManager : MonoBehaviour
         PlayerPrefs.Save();
     }
 
+    public void onAppExit()
+    {
+        Application.Quit();
+    }
+
     public void onSaveSettings()
     {
         PlayerPrefs.SetString(IP_ADDRESS, inputFieldIpAddress.text);

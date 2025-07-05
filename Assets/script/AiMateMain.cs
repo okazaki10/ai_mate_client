@@ -193,6 +193,7 @@ namespace Whisper.Samples
         }
 
         bool isGeneratingSong = false;
+        bool isAboutToQuit = false;
         void onSuccessFetch(ApiResponse<ApiData> response)
         {
             popUpMessage.showPopUpForever(response.data.generated_text);
@@ -240,8 +241,8 @@ namespace Whisper.Samples
                 {
                     vrmEmotionBlinkController.SetHappy();
                     vrmModelManager.animator.SetInteger("animBaseInt", 8);
-                }
-                if (action.ContainsInsensitive("SING"))
+                } 
+                else if (action.ContainsInsensitive("SING"))
                 {
                     var startUrl = action.IndexOf("(\"");
                     var endUrl = action.IndexOf("\")");
@@ -258,6 +259,10 @@ namespace Whisper.Samples
                         isGeneratingSong = true;
                         restApiClient.onGenerateSong(url, onSuccessGenerateSongs, onMusicDonePlaying, onErrorGenerateSong);
                     }
+                }
+                else if (action.ContainsInsensitive("QUIT"))
+                {
+                    isAboutToQuit = true;
                 }
             }
         }
@@ -289,6 +294,10 @@ namespace Whisper.Samples
             print("audio done playing");
             vrmEmotionBlinkController.SetNeutral();
             vrmModelManager.animator.SetInteger("animBaseInt", 0);
+            if (isAboutToQuit)
+            {
+                Application.Quit();
+            }
             if (!isGeneratingSong)
             {
                 print("hide pop up");
