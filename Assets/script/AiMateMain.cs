@@ -333,7 +333,7 @@ namespace Whisper.Samples
 
                 if (request.result != UnityWebRequest.Result.Success)
                 {
-                    popUpMessage.showMessage($"API request failed: {request.error}, please run start_whisperx_speech_recognition.bat");
+                    popUpMessage.showMessage($"API request failed: {request.error}, please run start_whisper_speech_recognition.bat");
                     UnityEngine.Debug.Log($"API request failed: {request.error}");
                     //OnErrorOccurred?.Invoke($"API request failed: {request.error}");
                     startRecord();

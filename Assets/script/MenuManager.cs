@@ -40,6 +40,7 @@ public class MenuManager : MonoBehaviour
         var isDefault = PlayerPrefs.GetInt(IS_DEFAULT, 0);
         if (isDefault == 0)
         {
+            PlayerPrefs.GetString("user");
             resetToDefault();
             PlayerPrefs.SetInt(IS_DEFAULT, 1);
             PlayerPrefs.Save();
