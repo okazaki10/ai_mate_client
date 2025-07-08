@@ -66,7 +66,7 @@ namespace Whisper.Samples
         {
             chatText.text += "\n\n" + menuManager.inputFieldUsername.text + " : " + inputFieldMessage.text;
             restApiClient.audioSourceInstrument.Stop();
-            restApiClient.SendTextAndPlayAudio(inputFieldMessage.text, onSuccessFetch, onErrorFetch, onAudioDonePlaying);
+            restApiClient.SendTextAndPlayAudio(inputFieldMessage.text, false, onSuccessFetch, onErrorFetch, onAudioDonePlaying);
             inputFieldMessage.text = "";
             toggleOffRecord = true;
             stopRecord();
@@ -251,9 +251,9 @@ namespace Whisper.Samples
                     {
                         continue;
                     }
-                    var url = action.Substring(startUrl+2, endUrl - startUrl);
+                    var url = action.Substring(startUrl+2, endUrl - startUrl - 2);
                     print(url);
-                    if (url != "")
+                    if (url != "" && url != "YOUTUBE_URL")
                     {
                         popUpMessage.SetMessage("Singing in process");
                         isGeneratingSong = true;
@@ -263,6 +263,24 @@ namespace Whisper.Samples
                 else if (action.ContainsInsensitive("QUIT"))
                 {
                     isAboutToQuit = true;
+                }
+                else if (action.ContainsInsensitive("SEARCH"))
+                {
+                    var startQuery = action.IndexOf("(\"");
+                    var endQuery = action.IndexOf("\")");
+                    print("start " + startQuery + " end" + endQuery);
+                    if (startQuery == -1 || endQuery == -1)
+                    {
+                        continue;
+                    }
+                    var query = action.Substring(startQuery + 2, endQuery - startQuery - 2);
+                    print(query);
+                    if (query != "")
+                    {
+                        popUpMessage.SetMessage("Web Search in process");
+                        isGeneratingSong = true;
+                        restApiClient.SendTextAndPlayAudio(query, true, onSuccessWebSearchFetch, onErrorFetch, onWebSearchDonePlaying);
+                    }
                 }
             }
         }
@@ -317,6 +335,21 @@ namespace Whisper.Samples
             startRecord();
         }
 
+        void onSuccessWebSearchFetch(ApiResponse<ApiData> response)
+        {
+            popUpMessage.showPopUpForever(response.data.generated_text);
+        }
+
+        void onWebSearchDonePlaying()
+        {
+            print("web search done playing");
+            isGeneratingSong = false;
+            vrmEmotionBlinkController.SetNeutral();
+            vrmModelManager.animator.SetInteger("animBaseInt", 0);
+            popUpMessage.HidePopUp();
+            startRecord();
+        }
+
         IEnumerator SendAudioToAPI(AudioClip audioClip)
         {
             byte[] wavData = AudioClipToWav(audioClip);
@@ -368,7 +401,7 @@ namespace Whisper.Samples
                     //chatText.text = response.text;
                     chatText.text += "\n\n" + menuManager.inputFieldUsername.text + " : " + response.text;
                     ScrollDown();
-                    restApiClient.SendTextAndPlayAudio(response.text, onSuccessFetch, onErrorFetch, onAudioDonePlaying);
+                    restApiClient.SendTextAndPlayAudio(response.text, false, onSuccessFetch, onErrorFetch, onAudioDonePlaying);
 
 
                 }

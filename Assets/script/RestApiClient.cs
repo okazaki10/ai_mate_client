@@ -69,6 +69,7 @@ public class ApiRequest
     public string name;
     public string prompt;
     public string language;
+    public bool isWebSearch;
 }
 
 [Serializable]
@@ -390,12 +391,12 @@ public class RestApiClient : MonoBehaviour
     }
 
     // Method to send text and receive audio response
-    public void SendTextRequest(string text, Action<ApiResponse<ApiData>> onSuccess = null, Action<string> onError = null)
+    public void SendTextRequest(string text, bool isWebSearch, Action<ApiResponse<ApiData>> onSuccess = null, Action<string> onError = null)
     {
-        StartCoroutine(SendTextRequestCoroutine(text, onSuccess, onError));
+        StartCoroutine(SendTextRequestCoroutine(text, isWebSearch, onSuccess, onError));
     }
 
-    private IEnumerator SendTextRequestCoroutine(string text, Action<ApiResponse<ApiData>> onSuccess, Action<string> onError)
+    private IEnumerator SendTextRequestCoroutine(string text, bool isWebSearch, Action<ApiResponse<ApiData>> onSuccess, Action<string> onError)
     {
         // Create request data
         ApiRequest requestData = new ApiRequest
@@ -403,7 +404,8 @@ public class RestApiClient : MonoBehaviour
             character_name = PlayerPrefs.GetString(MenuManager.CHARACTER_NAME),
             name = PlayerPrefs.GetString(MenuManager.USER_NAME),
             prompt = text,
-            language = localeDropDown.GetSelectedLocaleCode()
+            language = localeDropDown.GetSelectedLocaleCode(),
+            isWebSearch = isWebSearch
         };
 
         string jsonData = JsonUtility.ToJson(requestData);
@@ -1012,9 +1014,10 @@ public class RestApiClient : MonoBehaviour
     }
 
     // Convenience method to send text and automatically play returned audio
-    public void SendTextAndPlayAudio(string text, Action<ApiResponse<ApiData>> onSuccess = null, Action onError = null, Action onAudioDonePlaying = null)
+    public void SendTextAndPlayAudio(string text, bool isWebSearch, Action<ApiResponse<ApiData>> onSuccess = null, Action onError = null, Action onAudioDonePlaying = null)
     {
         SendTextRequest(text,
+            isWebSearch,
             onSuccess: (response) =>
             {
                 chatText.text += "\n\n" + response.data.character_name + " : " + response.data.generated_text;
