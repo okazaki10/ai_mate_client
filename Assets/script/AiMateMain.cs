@@ -201,7 +201,7 @@ namespace Whisper.Samples
             {
                 if (emotion.ContainsInsensitive("SHY"))
                 {
-                    vrmEmotionBlinkController.SetSad();
+                    vrmEmotionBlinkController.SetShy();
                     vrmModelManager.animator.SetInteger("animBaseInt", 1);
                 }
                 else if (emotion.ContainsInsensitive("ANG"))
@@ -226,7 +226,7 @@ namespace Whisper.Samples
                 }
                 else if (emotion.ContainsInsensitive("CURIOUS"))
                 {
-                    vrmEmotionBlinkController.SetNeutral();
+                    vrmEmotionBlinkController.SetCurious();
                     vrmModelManager.animator.SetInteger("animBaseInt", 6);
                 }
                 else if (emotion.ContainsInsensitive("SAD"))
