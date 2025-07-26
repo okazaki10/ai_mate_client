@@ -94,12 +94,14 @@ public class RequestSong
     public string url;
 }
 
+[Serializable]
+public class RequestConfig
+{
+    public string language;
+}
+
 public class RestApiClient : MonoBehaviour
 {
-    //[Header("API Configuration")]
-    //public string apiBaseUrl = "https://your-api-endpoint.com/api";
-    //public string apiKey = "your-api-key-here";
-
     [Header("Audio Settings")]
     public AudioSource audioSource;
     public AudioSource audioSourceInstrument;
@@ -225,30 +227,6 @@ public class RestApiClient : MonoBehaviour
         menuManager.inputFieldVrmPath.text = character.vrm_path;
     }
 
-    //public void onAddNewCharacter()
-    //{
-    //    var requestData = new RequestCharacter
-    //    {
-    //        name = "New Character",
-    //        description = "",
-    //        rvc_model = "",
-    //        vrm_path = ""
-    //    };
-
-    //    StartCoroutine(addCharacter(requestData, onSuccess: (response) =>
-    //    {
-    //        PlayerPrefs.SetString(MenuManager.CHARACTER_NAME, requestData.name);
-    //        onGetCharacters();
-    //    },
-    //      onError: (error) =>
-    //      {
-    //          Debug.LogError($"Failed to add character: {error}");
-    //          popUpMessage.showMessage($"Failed to add character: {error}, please run start_server.bat");
-    //      }
-    //     )
-    //  );
-    //}
-
     public void onResetToDefault()
     {
         var requestData = new RequestCharacter
@@ -287,6 +265,26 @@ public class RestApiClient : MonoBehaviour
         {
             PlayerPrefs.SetString(MenuManager.CHARACTER_NAME, requestData.name);
             onGetCharacters();
+            onGetChats();
+        },
+          onError: (error) =>
+          {
+              Debug.LogError($"Failed to add character: {error}");
+              popUpMessage.showMessage($"Failed to add character: {error}, please run start_server.bat");
+          }
+         )
+      );
+    }
+
+    public void onSetLanguage()
+    {
+        var requestData = new RequestConfig
+        {
+            language = localeDropDown.GetSelectedLocaleCode(),
+        };
+
+        StartCoroutine(setLanguage(requestData, onSuccess: (response) =>
+        {
             onGetChats();
         },
           onError: (error) =>
@@ -507,12 +505,6 @@ public class RestApiClient : MonoBehaviour
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
 
-            //// Add API key if provided
-            //if (!string.IsNullOrEmpty(apiKey))
-            //{
-            //    request.SetRequestHeader("Authorization", "Bearer " + apiKey);
-            //}
-
             yield return request.SendWebRequest();
 
             if (request.result != UnityWebRequest.Result.Success)
@@ -560,12 +552,6 @@ public class RestApiClient : MonoBehaviour
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
 
-            //// Add API key if provided
-            //if (!string.IsNullOrEmpty(apiKey))
-            //{
-            //    request.SetRequestHeader("Authorization", "Bearer " + apiKey);
-            //}
-
             yield return request.SendWebRequest();
 
             if (request.result != UnityWebRequest.Result.Success)
@@ -609,12 +595,6 @@ public class RestApiClient : MonoBehaviour
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
 
-            //// Add API key if provided
-            //if (!string.IsNullOrEmpty(apiKey))
-            //{
-            //    request.SetRequestHeader("Authorization", "Bearer " + apiKey);
-            //}
-
             yield return request.SendWebRequest();
 
             if (request.result != UnityWebRequest.Result.Success)
@@ -657,11 +637,47 @@ public class RestApiClient : MonoBehaviour
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
 
-            //// Add API key if provided
-            //if (!string.IsNullOrEmpty(apiKey))
-            //{
-            //    request.SetRequestHeader("Authorization", "Bearer " + apiKey);
-            //}
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                string error = $"Request failed: {request.error} - {request.responseCode}";
+                Debug.LogError(error);
+                onError?.Invoke(error);
+                yield break;
+            }
+
+            string responseText = request.downloadHandler.text;
+
+            // Parse response outside of try-catch to avoid yield issues
+            var response = ParseApiResponse<String>(responseText);
+
+            if (response == null)
+            {
+                string error = "Failed to parse API response";
+                Debug.LogError(error);
+                onError?.Invoke(error);
+                yield break;
+            }
+
+            Debug.Log($"API Response Status: {response.status}");
+            Debug.Log($"Generated Text: {response.data}");
+
+            onSuccess?.Invoke(response);
+        }
+    }
+
+    private IEnumerator setLanguage(RequestConfig requestData, Action<ApiResponse<String>> onSuccess, Action<string> onError)
+    {
+        string jsonData = JsonUtility.ToJson(requestData);
+        byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonData);
+
+        // Create UnityWebRequest
+        using (UnityWebRequest request = new UnityWebRequest(PlayerPrefs.GetString(MenuManager.IP_ADDRESS) + ":7874" + "/set-language", "POST"))
+        {
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
 
             yield return request.SendWebRequest();
 
@@ -1020,8 +1036,7 @@ public class RestApiClient : MonoBehaviour
             isWebSearch,
             onSuccess: (response) =>
             {
-                chatText.text += "\n\n" + response.data.character_name + " : " + response.data.generated_text;
-                ScrollDown();
+                onGetChats();
                 onSuccess?.Invoke(response);
                 if (!string.IsNullOrEmpty(response.data.base64_audio))
                 {

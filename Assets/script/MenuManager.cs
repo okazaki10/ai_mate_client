@@ -21,7 +21,6 @@ public class MenuManager : MonoBehaviour
     public TMP_Dropdown dropdownRvcModels;
     public TMP_InputField inputFieldVrmPath;
 
-    public MicrophoneRecord microphoneRecord;
     public LocaleDropdown localeDropdown;
     public RestApiClient restApiClient;
 
@@ -93,6 +92,7 @@ public class MenuManager : MonoBehaviour
     {
         PlayerPrefs.SetInt(LANGUAGE, index);
         PlayerPrefs.Save();
+        restApiClient.onSetLanguage();
     }
 
     public void onAppExit()
@@ -139,8 +139,6 @@ public class MenuManager : MonoBehaviour
         {
             inputFieldVadThd.text = PlayerPrefs.GetString(VAD_THD);
             inputFieldVadStopTime.text = PlayerPrefs.GetString(VAD_STOP_TIME);
-            microphoneRecord.vadThd = float.Parse(inputFieldVadThd.text);
-            microphoneRecord.vadStopTime = float.Parse(inputFieldVadStopTime.text);
         }
         catch (FormatException)
         {

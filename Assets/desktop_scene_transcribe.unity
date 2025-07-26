@@ -186,7 +186,7 @@ MonoBehaviour:
     m_Alignment: 0
     m_AlignByGeometry: 0
     m_RichText: 0
-    m_HorizontalOverflow: 1
+    m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: 
@@ -2309,8 +2309,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 28.300001, y: -81.9}
-  m_SizeDelta: {x: 220, y: 30}
+  m_AnchoredPosition: {x: 30.3, y: -87.2}
+  m_SizeDelta: {x: 240, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &199835788
 MonoBehaviour:
@@ -2359,7 +2359,7 @@ MonoBehaviour:
   m_InputType: 0
   m_AsteriskChar: 42
   m_KeyboardType: 0
-  m_LineType: 0
+  m_LineType: 2
   m_HideMobileInput: 0
   m_CharacterValidation: 0
   m_CharacterLimit: 0
@@ -2368,19 +2368,7 @@ MonoBehaviour:
       m_Calls: []
   m_OnDidEndEdit:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1337591122}
-        m_TargetAssemblyTypeName: Whisper.Samples.AiMateMain, Assembly-CSharp
-        m_MethodName: OnInputEndEdit
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -3607,7 +3595,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.00008392334, y: -35.000004}
+  m_AnchoredPosition: {x: 0.00008392334, y: -35}
   m_SizeDelta: {x: -3, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &364382885
@@ -5642,7 +5630,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 78.299995, y: -90.7}
+  m_AnchoredPosition: {x: 78.68, y: -91.8}
   m_SizeDelta: {x: 120, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &561685644
@@ -9895,7 +9883,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 67.40001, y: -81.3}
+  m_AnchoredPosition: {x: 71.8, y: -82.40001}
   m_SizeDelta: {x: 50, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1161330827
@@ -9942,8 +9930,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1337591122}
-        m_TargetAssemblyTypeName: Whisper.Samples.AiMateMain, Assembly-CSharp
+      - m_Target: {fileID: 1337591134}
+        m_TargetAssemblyTypeName: AiMateClient, Assembly-CSharp
         m_MethodName: onSendMessage
         m_Mode: 1
         m_Arguments:
@@ -10527,7 +10515,7 @@ MonoBehaviour:
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
-    m_VerticalOverflow: 0
+    m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: 
 --- !u!222 &1232870923
@@ -11485,8 +11473,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1337591121}
-  - component: {fileID: 1337591122}
-  - component: {fileID: 1337591123}
+  - component: {fileID: 1337591134}
+  - component: {fileID: 1337591133}
   - component: {fileID: 1337591124}
   - component: {fileID: 1337591125}
   - component: {fileID: 1337591126}
@@ -11518,63 +11506,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1337591122
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1337591120}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9e521575400887a4ba07a0bec26eb57b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  microphoneRecord: {fileID: 1337591123}
-  streamSegments: 1
-  printLanguage: 1
-  recordText: {fileID: 433164992}
-  chatText: {fileID: 1454312580}
-  languageDropdown: {fileID: 1997065318}
-  restApiClient: {fileID: 1337591125}
-  inputFieldMessage: {fileID: 199835788}
-  scrollRectChat: {fileID: 1942243640}
-  vrmModelManager: {fileID: 1337591129}
-  vrmEmotionBlinkController: {fileID: 1337591130}
-  popUpMessage: {fileID: 1067386745}
-  menuManager: {fileID: 1337591131}
-  singingAnimation: {fileID: 1337591132}
-  isEcho: 0
---- !u!114 &1337591123
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1337591120}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: db3fc1be3f5963f45b72f2e3b04d8f2f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maxLengthSec: 60
-  loop: 0
-  frequency: 16000
-  chunksLengthSec: 0.5
-  echo: 0
-  useVad: 1
-  vadUpdateRateSec: 0.1
-  vadContextSec: 30
-  vadLastSec: 1.25
-  vadThd: 1.1
-  vadFreqThd: 100
-  vadIndicatorImage: {fileID: 1756544758}
-  vadStop: 1
-  dropVadPart: 1
-  vadStopTime: 2
-  microphoneDropdown: {fileID: 0}
-  microphoneDefaultLabel: Default microphone
-  voiceStartBufferSec: 1
 --- !u!82 &1337591124
 AudioSource:
   m_ObjectHideFlags: 0
@@ -11832,7 +11763,6 @@ MonoBehaviour:
   inputFieldCharacterDescription: {fileID: 310813363}
   dropdownRvcModels: {fileID: 1337923739}
   inputFieldVrmPath: {fileID: 211903566}
-  microphoneRecord: {fileID: 1337591123}
   localeDropdown: {fileID: 1337591127}
   restApiClient: {fileID: 1337591125}
 --- !u!114 &1337591132
@@ -11864,6 +11794,47 @@ MonoBehaviour:
   overrideAnimator: 0
   singingTrigger: StartSinging
   vRMModelManager: {fileID: 1337591129}
+--- !u!114 &1337591133
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1337591120}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96c087495f99cf34989163eaf0ff53bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  serverUrl: ws://localhost:8765
+  inputFieldMessage: {fileID: 199835788}
+  recordText: {fileID: 433164992}
+  popUpMessage: {fileID: 1067386745}
+  aiMateClient: {fileID: 1337591134}
+--- !u!114 &1337591134
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1337591120}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06955b971590131409b317819a88e263, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  recordText: {fileID: 433164992}
+  chatText: {fileID: 1454312580}
+  languageDropdown: {fileID: 1997065318}
+  restApiClient: {fileID: 1337591125}
+  inputFieldMessage: {fileID: 199835788}
+  scrollRectChat: {fileID: 1942243640}
+  vrmModelManager: {fileID: 1337591129}
+  vrmEmotionBlinkController: {fileID: 1337591130}
+  popUpMessage: {fileID: 1067386745}
+  menuManager: {fileID: 1337591131}
+  singingAnimation: {fileID: 1337591132}
+  speechRecognitionClient: {fileID: 1337591133}
 --- !u!1 &1337923737
 GameObject:
   m_ObjectHideFlags: 0
@@ -14913,7 +14884,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 968887395}
   m_Direction: 2
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.9362526
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -15216,7 +15187,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1756544757
 RectTransform:
   m_ObjectHideFlags: 0
@@ -18025,7 +17996,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 81.3, y: -81.3}
+  m_AnchoredPosition: {x: 86.08001, y: -82.40001}
   m_SizeDelta: {x: 90, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2119801010
@@ -18072,8 +18043,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1337591122}
-        m_TargetAssemblyTypeName: Whisper.Samples.AiMateMain, Assembly-CSharp
+      - m_Target: {fileID: 1337591133}
+        m_TargetAssemblyTypeName: SpeechRecognitionClient, Assembly-CSharp
         m_MethodName: OnButtonRecordPressed
         m_Mode: 1
         m_Arguments:
