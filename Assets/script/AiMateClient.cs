@@ -25,6 +25,7 @@ public class AiMateClient : MonoBehaviour
     {
         if (inputFieldMessage.isFocused && Input.GetKeyDown(KeyCode.Return))
         {
+            inputFieldMessage.text = inputFieldMessage.text.Trim();
             if (inputFieldMessage.text.Trim() != "")
             {
                 onSendMessage();
