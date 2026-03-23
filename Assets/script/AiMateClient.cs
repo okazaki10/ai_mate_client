@@ -26,7 +26,7 @@ public class AiMateClient : MonoBehaviour
         if (inputFieldMessage.isFocused && Input.GetKeyDown(KeyCode.Return))
         {
             inputFieldMessage.text = inputFieldMessage.text.Trim();
-            if (inputFieldMessage.text.Trim() != "")
+            if (inputFieldMessage.text != "")
             {
                 onSendMessage();
             } else
@@ -77,6 +77,11 @@ public class AiMateClient : MonoBehaviour
                 vrmModelManager.animator.SetInteger("animBaseInt", 2);
             }
             else if (emotion.ContainsInsensitive("SURPRISE"))
+            {
+                vrmEmotionBlinkController.SetNeutral();
+                vrmModelManager.animator.SetInteger("animBaseInt", 3);
+            }
+            else if (emotion.ContainsInsensitive("SHOCK"))
             {
                 vrmEmotionBlinkController.SetNeutral();
                 vrmModelManager.animator.SetInteger("animBaseInt", 3);

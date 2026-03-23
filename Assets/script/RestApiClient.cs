@@ -100,6 +100,12 @@ public class RequestConfig
     public string language;
 }
 
+[Serializable]
+public class RequestModel
+{
+    public string model_path;
+}
+
 public class RestApiClient : MonoBehaviour
 {
     [Header("Audio Settings")]
@@ -109,6 +115,7 @@ public class RestApiClient : MonoBehaviour
 
     public ScrollRect scrollRectChat;
     public LocaleDropdown localeDropDown;
+    public TMP_Dropdown dropdownLlmModels;
     public PopUpMessage popUpMessage;
     public MenuManager menuManager;
     public VRMAutoLoader vRMAutoLoader;
@@ -116,6 +123,8 @@ public class RestApiClient : MonoBehaviour
     public List<CharacterDto> characters = new List<CharacterDto>();
     public CharacterDto character = new CharacterDto();
     public List<string> rvcList = new List<string>();
+    public List<string> modelList = new List<string>();
+    public string model = "";
 
     int runningSongCoroutines = 0;
     private void Start()
@@ -190,6 +199,41 @@ public class RestApiClient : MonoBehaviour
             populateCharacterSetting();
 
         },
+         onError: (error) =>
+         {
+             Debug.LogError($"Failed to fetch chats: {error}, please run start_server.bat");
+             popUpMessage.showMessage(error);
+         }
+        )
+     );
+    }
+
+    public void onGetModels()
+    {
+        StartCoroutine(remoteGet<List<string>>(PlayerPrefs.GetString(MenuManager.IP_ADDRESS) + ":7874" + "/get-models",
+            onSuccess: (response) =>
+        {
+            modelList = response.data;
+            menuManager.populateModel(modelList);
+            onGetModel();
+        },
+         onError: (error) =>
+         {
+             Debug.LogError($"Failed to fetch chats: {error}, please run start_server.bat");
+             popUpMessage.showMessage(error);
+         }
+        )
+     );
+    }
+
+    public void onGetModel()
+    {
+        StartCoroutine(remoteGet<string>(PlayerPrefs.GetString(MenuManager.IP_ADDRESS) + ":7874" + "/get-model",
+            onSuccess: (response) =>
+            {
+                menuManager.dropdownLlmModels.value = modelList.FindIndex(value => value == response.data);
+                menuManager.dropdownLlmModels.RefreshShownValue();
+            },
          onError: (error) =>
          {
              Debug.LogError($"Failed to fetch chats: {error}, please run start_server.bat");
@@ -296,6 +340,29 @@ public class RestApiClient : MonoBehaviour
       );
     }
 
+    public void onSetModel()
+    {
+        var requestData = new RequestModel
+        {
+            model_path = modelList[dropdownLlmModels.value],
+        };
+
+        StartCoroutine(remotePost<RequestModel, string>(
+            requestData, 
+            PlayerPrefs.GetString(MenuManager.IP_ADDRESS) + ":7874" + "/set-model",
+            onSuccess: (response) =>
+            {
+                onGetChats();
+            },
+          onError: (error) =>
+          {
+              Debug.LogError($"Failed to add character: {error}");
+              popUpMessage.showMessage($"Failed to add character: {error}, please run start_server.bat");
+          }
+         )
+      );
+    }
+
     public void onGenerateSong(string url, Action<ApiResponse<ResponseSong>> onSuccess, Action onAudioDonePlaying, Action<string> onError)
     {
         var requestData = new RequestSong
@@ -386,6 +453,11 @@ public class RestApiClient : MonoBehaviour
     public void onChangeRvc(int index)
     {
         character.rvc_model = rvcList[index];
+    }
+
+    public void onChangeModel(int index)
+    {
+        model = modelList[index];
     }
 
     // Method to send text and receive audio response
@@ -481,6 +553,50 @@ public class RestApiClient : MonoBehaviour
 
             // Parse response outside of try-catch to avoid yield issues
             var response = ParseApiResponse<List<string>>(responseText);
+
+            if (response == null)
+            {
+                string error = "Failed to parse API response";
+                Debug.LogError(error);
+                onError?.Invoke(error);
+                yield break;
+            }
+
+            Debug.Log($"API Response Status: {response.status}");
+            Debug.Log($"Generated Text: {response.data}");
+
+            onSuccess?.Invoke(response);
+        }
+    }
+
+    private IEnumerator remoteGet<T>(string url, Action<ApiResponse<T>> onSuccess, Action<string> onError)
+    {
+        // Create UnityWebRequest
+        using (UnityWebRequest request = new UnityWebRequest(url, "GET"))
+        {
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            //// Add API key if provided
+            //if (!string.IsNullOrEmpty(apiKey))
+            //{
+            //    request.SetRequestHeader("Authorization", "Bearer " + apiKey);
+            //}
+
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                string error = $"Request failed: {request.error} - {request.responseCode}";
+                Debug.LogError(error);
+                onError?.Invoke(error);
+                yield break;
+            }
+
+            string responseText = request.downloadHandler.text;
+
+            // Parse response outside of try-catch to avoid yield issues
+            var response = ParseApiResponse<T>(responseText);
 
             if (response == null)
             {
@@ -693,6 +809,48 @@ public class RestApiClient : MonoBehaviour
 
             // Parse response outside of try-catch to avoid yield issues
             var response = ParseApiResponse<String>(responseText);
+
+            if (response == null)
+            {
+                string error = "Failed to parse API response";
+                Debug.LogError(error);
+                onError?.Invoke(error);
+                yield break;
+            }
+
+            Debug.Log($"API Response Status: {response.status}");
+            Debug.Log($"Generated Text: {response.data}");
+
+            onSuccess?.Invoke(response);
+        }
+    }
+
+    private IEnumerator remotePost<T,Z>(T requestData, String url, Action<ApiResponse<Z>> onSuccess, Action<string> onError)
+    {
+        string jsonData = JsonUtility.ToJson(requestData);
+        byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonData);
+
+        // Create UnityWebRequest
+        using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
+        {
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            yield return request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                string error = $"Request failed: {request.error} - {request.responseCode}";
+                Debug.LogError(error);
+                onError?.Invoke(error);
+                yield break;
+            }
+
+            string responseText = request.downloadHandler.text;
+
+            // Parse response outside of try-catch to avoid yield issues
+            var response = ParseApiResponse<Z>(responseText);
 
             if (response == null)
             {

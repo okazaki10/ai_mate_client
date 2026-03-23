@@ -19,6 +19,7 @@ public class MenuManager : MonoBehaviour
     public TMP_InputField inputFieldCharacterName;
     public TMP_InputField inputFieldCharacterDescription;
     public TMP_Dropdown dropdownRvcModels;
+    public TMP_Dropdown dropdownLlmModels;
     public TMP_InputField inputFieldVrmPath;
 
     public LocaleDropdown localeDropdown;
@@ -45,6 +46,7 @@ public class MenuManager : MonoBehaviour
             PlayerPrefs.Save();
         }
         onLoadSettings();
+        restApiClient.onGetModels();
     }
 
     // Update is called once per frame
@@ -107,6 +109,7 @@ public class MenuManager : MonoBehaviour
         PlayerPrefs.SetString(VAD_STOP_TIME, inputFieldVadStopTime.text);
         PlayerPrefs.Save();
         onLoadSettings();
+        restApiClient.onSetModel();
     }
 
     public void onLoadSettings()
@@ -163,5 +166,12 @@ public class MenuManager : MonoBehaviour
         dropdownRvcModels.ClearOptions();
         dropdownRvcModels.AddOptions(rvcList);
         dropdownRvcModels.RefreshShownValue();
+    }
+
+    public void populateModel(List<string> modelList)
+    {
+        dropdownLlmModels.ClearOptions();
+        dropdownLlmModels.AddOptions(modelList);
+        dropdownLlmModels.RefreshShownValue();
     }
 }
